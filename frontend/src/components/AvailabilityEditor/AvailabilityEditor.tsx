@@ -1,5 +1,6 @@
-import { Fragment, useCallback, useEffect, useRef, useState } from 'react'
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Trans } from 'react-i18next/TransWithoutContext'
+import { Temporal } from '@js-temporal/polyfill'
 
 import Button from '/src/components/Button/Button'
 import Content from '/src/components/Content/Content'
@@ -13,6 +14,7 @@ import styles from './AvailabilityEditor.module.scss'
 import GoogleCalendar from './components/GoogleCalendar/GoogleCalendar'
 import RecentEvents from './components/RecentEvents/RecentEvents'
 import ScoreSelector from './components/ScoreSelector/ScoreSelector'
+import { useCalendarBridge } from './useCalendarBridge'
 import viewerStyles from '../AvailabilityViewer/AvailabilityViewer.module.scss'
 import Skeleton from '../AvailabilityViewer/components/Skeleton/Skeleton'
 
@@ -59,6 +61,28 @@ const AvailabilityEditor = ({ eventId, times, timezone, value = [], onChange, ta
     }))
   ), [onChange, times, value])
 
+  // Let a browser extension clear times that conflict with the user's calendar
+  // `times` is in click order, so take the true min / max
+  const isSpecificDates = times[0]?.length === 13
+  const { timeStart, timeEnd } = useMemo(() => {
+    if (!isSpecificDates) return { timeStart: undefined, timeEnd: undefined }
+    const parsed = times.map(parseSpecificDate)
+    let min = parsed[0]
+    let max = parsed[0]
+    for (const p of parsed) {
+      if (Temporal.ZonedDateTime.compare(p, min) < 0) min = p
+      if (Temporal.ZonedDateTime.compare(p, max) > 0) max = p
+    }
+    return { timeStart: min, timeEnd: max.add({ minutes: 15 }) }
+  }, [isSpecificDates, times])
+  useCalendarBridge({
+    timezone,
+    timeStart,
+    timeEnd,
+    preferences: value,
+    onImport: onChange,
+  })
+
   // Selection keyboard shortcuts
   useEffect(() => {
     const handleKeydown = (e: KeyboardEvent) => {
@@ -101,6 +125,7 @@ const AvailabilityEditor = ({ eventId, times, timezone, value = [], onChange, ta
           preferences={value}
           onImport={onChange}
         />
+        <div data-calendar-bridge />
       </div>
     </Content>}
     <Content>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<d:multistatus xmlns:d="DAV:" xmlns:cal="urn:ietf:params:xml:ns:caldav">
+ <d:response>
+  <d:href>/remote.php/dav/calendars/alice/personal/a.ics</d:href>
+  <d:propstat>
+   <d:prop>
+    <d:getetag>"1"</d:getetag>
+    <cal:calendar-data>BEGIN:VCALENDAR&#13;
+BEGIN:VEVENT&#13;
+UID:a&#13;
+SUMMARY:Fish &amp; chips&#13;
+END:VEVENT&#13;
+END:VCALENDAR&#13;
+</cal:calendar-data>
+   </d:prop>
+   <d:status>HTTP/1.1 200 OK</d:status>
+  </d:propstat>
+ </d:response>
+ <d:response>
+  <d:href>/remote.php/dav/calendars/alice/personal/b.ics</d:href>
+  <d:propstat>
+   <d:prop>
+    <cal:calendar-data><![CDATA[BEGIN:VCALENDAR
+BEGIN:VEVENT
+UID:b
+SUMMARY:<cdata> party
+END:VEVENT
+END:VCALENDAR
+]]></cal:calendar-data>
+   </d:prop>
+   <d:status>HTTP/1.1 200 OK</d:status>
+  </d:propstat>
+ </d:response>
+</d:multistatus>
