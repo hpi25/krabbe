@@ -1,0 +1,65 @@
+name: Release Extension
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - browser-extension/**
+      - .github/workflows/release_extension.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# Two pushes in quick succession must not race on the same tag and asset
+concurrency:
+  group: release-extension
+  cancel-in-progress: false
+
+env:
+  TAG: browser-extension
+  ASSET: krabbe.xpi
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: browser-extension
+
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 26
+      # Corepack is no longer bundled with Node.js, and must be enabled before setup-node can cache yarn
+      - run: npm install --global corepack && corepack enable
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 26
+          cache: 'yarn'
+          cache-dependency-path: browser-extension/yarn.lock
+      - run: yarn install --immutable
+      - run: yarn build
+      # An xpi is a zip with manifest.json at its root
+      - run: cd dist/firefox && zip -r -X "../$ASSET" .
+
+      # Move the tag to this commit so the release always points at the build it carries
+      - run: |
+          git tag --force "$TAG"
+          git push --force origin "refs/tags/$TAG"
+
+      - name: Create or update release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          notes="Latest build of the Firefox extension from ${GITHUB_SHA::7}."
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            gh release edit "$TAG" --title "Browser extension" --notes "$notes"
+          else
+            gh release create "$TAG" --title "Browser extension" --notes "$notes" --latest=false
+          fi
+          # Same file name every time, so --clobber replaces the old build instead of adding one
+          gh release upload "$TAG" "dist/$ASSET" --clobber
