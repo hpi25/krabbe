@@ -112,6 +112,7 @@ const AvailabilityEditor = ({ eventId, times, timezone, value = [], onChange, ta
           preferences={value}
           onImport={onChange}
         />
+        <div data-calendar-bridge />
       </div>
     </Content>}
     <Content>
