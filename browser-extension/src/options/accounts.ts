@@ -23,10 +23,11 @@ export function mergeRefreshedCalendars(
   }));
 }
 
-/** True if another account (not `removedAccountId`) shares the removed account's server origin. */
-export function originStillUsed(accounts: Account[], removedAccountId: string): boolean {
+/** True if the krabbe URL or another account (not `removedAccountId`) shares the removed account's server origin. */
+export function originStillUsed(accounts: Account[], removedAccountId: string, krabbeUrl: string): boolean {
   const removed = accounts.find((a) => a.id === removedAccountId);
   if (!removed) return false;
   const origin = new URL(removed.serverUrl).origin;
+  if (new URL(krabbeUrl).origin === origin) return true;
   return accounts.some((a) => a.id !== removedAccountId && new URL(a.serverUrl).origin === origin);
 }

@@ -153,15 +153,18 @@ function renderAccount(account: Account): HTMLElement {
   remove.addEventListener('click', () => {
     void (async () => {
       try {
-        const { accounts, selectedCalendars } = await getSettings();
+        const { accounts, selectedCalendars, krabbeUrl } = await getSettings();
         const urls = new Set(account.calendars.map((c) => c.url));
-        const shared = originStillUsed(accounts, account.id);
+        const shared = originStillUsed(accounts, account.id, krabbeUrl);
         await saveSettings({
           accounts: accounts.filter((a) => a.id !== account.id),
           selectedCalendars: selectedCalendars.filter((u) => !urls.has(u)),
         });
-        if (!shared) await ext.permissions.remove({ origins: [originPattern(account.serverUrl)] });
-        await render();
+        try {
+          if (!shared) await ext.permissions.remove({ origins: [originPattern(account.serverUrl)] });
+        } finally {
+          await render();
+        }
       } catch (e) {
         setStatus(status, errMsg(e), true);
       }

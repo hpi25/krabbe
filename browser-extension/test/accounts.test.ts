@@ -30,9 +30,16 @@ test('mergeRefreshedCalendars keeps flags, adds new, drops vanished, takes fresh
 
 const acc = (id: string, serverUrl: string): Account => ({ id, label: id, serverUrl, username: 'u', password: 'p', calendars: [] });
 
+const K = 'https://krabbe.example';
+
 test('originStillUsed checks other accounts sharing the origin', () => {
   const accounts = [acc('1', 'https://dav.example/cal/a'), acc('2', 'https://dav.example/cal/b'), acc('3', 'https://other.example')];
-  assert.equal(originStillUsed(accounts, '1'), true);
-  assert.equal(originStillUsed(accounts, '3'), false);
-  assert.equal(originStillUsed(accounts, 'nope'), false);
+  assert.equal(originStillUsed(accounts, '1', K), true);
+  assert.equal(originStillUsed(accounts, '3', K), false);
+  assert.equal(originStillUsed(accounts, 'nope', K), false);
+});
+
+test('originStillUsed protects the krabbe url origin', () => {
+  const accounts = [acc('1', 'https://krabbe.example/dav')];
+  assert.equal(originStillUsed(accounts, '1', 'https://krabbe.example'), true);
 });
