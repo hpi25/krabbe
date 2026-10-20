@@ -17,6 +17,9 @@
         "previous": "Vorheriger Monat",
         "next": "Nächster Monat",
         "today": "heute"
+      },
+      "warnings": {
+        "date_in_past": "Einige der ausgewählten Daten liegen in der Vergangenheit"
       }
     },
     "times": {
@@ -41,6 +44,7 @@
     "availabilities": "Verfügbarkeiten eingegeben",
     "content": {
       "p1": "$t(common:name) hilft dir dabei, deine Veranstaltung an die Zeitpläne aller anzupassen. Erstelle einfach oben eine Veranstaltung und sende den Link an alle Teilnehmer. Die Ergebnisse werden live aktualisiert und du kannst einsehen, wann alle frei sind.<1/><2>Erfahre mehr über $t(common:name)</2>.",
+      "p3": "Basierend auf <1>Star Fit</1> ist $t(common:name) die moderne Lösung für deine Gruppenplanungen.",
       "p4": "Der Quellcode für $t(common:name) ist open source. Wenn du Probleme findest oder mithelfen willst, kannst du das im <1>Repository</1> am einfachsten tun.",
       "p6": "Um Ihre Privatsphäre zu schützen, werden Ereignisse nach 3 Monaten Inaktivität gelöscht und alle Passwörter werden sicher gehasht.",
       "p5": "Wenn dir $t(common:name) helfen konnte, unterstütze uns unten, damit es für alle kostenlos bleibt. 🦀"

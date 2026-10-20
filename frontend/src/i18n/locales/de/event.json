@@ -1,5 +1,6 @@
 {
-  "available": "Verfügbar",
+  "stars_one": "{{count}} Stern",
+  "stars_other": "{{count}} Sterne",
   "greyed_times": "Dieser Bereich ist ausgegraut, da er nicht zum Event gehört. Möglicherweise sehen Sie sich dieses Ereignis in einer anderen Zeitzone als dem Ort an, an dem es erstellt wurde.",
   "nav": {
     "title": "Zum kopieren klicken",
@@ -24,7 +25,8 @@
       "unknown": "Einloggen fehlgeschlagen. Bitte versuche es erneut."
     },
     "created_in_timezone": "Diese Veranstaltung wurde in der Zeitzone <strong>{{timezone}}</strong> erstellt. <3>Klicke hier</3> um sie zu übernehmen.",
-    "local_timezone": "Deine lokale Zeitzone wird als <strong>{{timezone}}</strong> erkannt. <3>Klicke hier</3> um sie zu übernehmen."
+    "local_timezone": "Deine lokale Zeitzone wird als <strong>{{timezone}}</strong> erkannt. <3>Klicke hier</3> um sie zu übernehmen.",
+    "dst_warning": "Deine Zeitzone und die Zeitzone der Veranstaltung haben unterschiedliche Sommerzeitregeln. Rund um die Zeitumstellung können sich Zeiten um etwa 1 Stunde verschieben."
   },
   "offline": {
     "title": "Du bist offline",
@@ -42,18 +44,39 @@
   "group": {
     "legend_tooltip": "Klicke hier, um die grösste Verfügbarkeit hervorzuheben",
     "info1": "Bewege den Mauszeiger oder tippe auf den Kalender unten, um zu sehen, wer verfügbar ist",
-    "info2": "Klicke auf die Namen unten, um einzelne Personen anzuzeigen"
+    "info2": "Klicke auf die Namen unten, um einzelne Personen anzuzeigen",
+    "clipboard_message": "Verfügbare Personen am {{date}}",
+    "best_fit1": "Für eine Veranstaltungsdauer von",
+    "best_fit2": "ist die beste Zeit <1>{{time}}</1>",
+    "best_fit3": "<strong>{{bestTime}}</strong> und <strong>{{nextBest}}</strong> haben mit {{bestStars}} und {{nextStars}} am besten abgeschnitten<br/>Zwischen diesen beiden Finalisten: {{bestVotesPeople}} für die beste Zeit, {{nextVotesPeople}} für die zweitbeste Zeit und {{noPrefPeople}} ohne Präferenz",
+    "hours_one": "{{count}} Stunde",
+    "hours_other": "{{count}} Stunden",
+    "minutes": "Minuten",
+    "people_one": "{{count}} Person",
+    "people_other": "{{count}} Personen"
   },
   "you": {
     "info": "Klicke und ziehe im Kalender unten, um deine Verfügbarkeit festzulegen",
+    "scoring_info": "Die beste Zeit wird mit <1>STAR Voting</1> berechnet. Gib deinen Wunschzeiten fünf Sterne, deinen letzten Optionen null Sterne und bewerte andere Zeiten nach Belieben.",
+    "tabulation_info": "Die beiden Zeiten mit der höchsten Bewertung sind Finalisten. Deine volle Stimme geht an den Finalisten, den du bevorzugst.",
     "select_all": "Alle wählen",
     "select_none": "Keine wählen",
+    "select_invert": "Auswahl umkehren",
     "google_cal": "Mit Google Kalender synchronisieren",
     "outlook_cal": "Mit Outlook Kalender synchronisieren",
+    "recent_event": "Mit einer kürzlichen Veranstaltung synchronisieren",
     "integration": {
       "logout": "ausloggen",
-      "info": "Durch den Import wird deine aktuelle Verfügbarkeit überschrieben",
-      "button": "Verfügbarkeit importieren"
-    }
+      "close": "schließen",
+      "recent": {
+        "info": "Durch den Import werden deine aktuellen Präferenzen überschrieben",
+        "button": "Präferenzen importieren"
+      },
+      "calendar": {
+        "info": "1+ Sterne setzen freie Zeiten auf diese Bewertung, 0 Sterne setzen belegte Zeiten auf 0 Sterne",
+        "button": "Verfügbarkeit importieren"
+      }
+    },
+    "done": "Fertig"
   }
 }
