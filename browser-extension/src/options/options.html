@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Krabbe settings</title>
+  </head>
+  <body>
+    <main>
+      <h1>Krabbe settings</h1>
+
+      <section>
+        <h2>Krabbe server</h2>
+        <form id="krabbe-form">
+          <label>URL <input id="krabbe-url" type="url" required></label>
+          <button type="submit">Save</button>
+        </form>
+        <p id="krabbe-status" class="status" role="status"></p>
+      </section>
+
+      <section>
+        <h2>CalDAV accounts</h2>
+        <div id="accounts"></div>
+        <h3>Add account</h3>
+        <form id="account-form">
+          <label>Label <input name="label" type="text" required></label>
+          <label>Server URL <input name="serverUrl" type="url" required placeholder="https://dav.example.com/"></label>
+          <label>Username <input name="username" type="text" required autocomplete="off"></label>
+          <label>Password <input name="password" type="password" required autocomplete="new-password"></label>
+          <button type="submit">Add account</button>
+        </form>
+        <p id="account-status" class="status" role="status"></p>
+      </section>
+    </main>
+    <script type="module" src="options.js"></script>
+  </body>
+</html>
