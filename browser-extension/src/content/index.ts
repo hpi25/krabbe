@@ -2,6 +2,7 @@ import { parseReady, type ReadyInfo } from './bridge.ts';
 import { mountPicker } from './picker.ts';
 
 const SELECTOR = '[data-calendar-bridge]';
+const PANEL_SELECTOR = '[data-calendar-bridge-panel]';
 
 let ready: ReadyInfo | null = null;
 const mounted = new WeakSet<Element>();
@@ -11,7 +12,7 @@ function tryMount(): void {
   for (const anchor of document.querySelectorAll<HTMLElement>(SELECTOR)) {
     if (mounted.has(anchor)) continue;
     mounted.add(anchor);
-    mountPicker(anchor, () => ready as ReadyInfo);
+    mountPicker(anchor, document.querySelector<HTMLElement>(PANEL_SELECTOR), () => ready as ReadyInfo);
     // Lets the page hide its "get the extension" fallback.
     window.postMessage({ source: 'krabbe-extension', type: 'calendar-bridge:mounted' }, window.location.origin);
   }

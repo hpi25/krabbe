@@ -137,6 +137,8 @@ const AvailabilityEditor = ({ eventId, times, timezone, value = [], onChange, ta
           >{t('you.calendar_conflicts')}</Button>}
         </div>
       </div>
+      {/* The extension's panel goes here, outside the row, so opening it doesn't reflow the buttons */}
+      <div data-calendar-bridge-panel />
     </Content>}
     <Content>
       <ScoreSelector

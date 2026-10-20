@@ -67,20 +67,31 @@ function waitForApplied(): Promise<number | null> {
   });
 }
 
-/** Mounts the picker into `anchor` inside a closed shadow root. */
-export function mountPicker(anchor: HTMLElement, getReady: () => ReadyInfo): void {
+/** A closed shadow root under `parent`, styled with the picker CSS; returns its `.root`. */
+function shadowRoot(parent: HTMLElement): HTMLDivElement {
   const host = el('div');
-  anchor.append(host);
+  parent.append(host);
   const shadow = host.attachShadow({ mode: 'closed' });
   const style = el('style');
   style.textContent = css;
   const root = el('div', 'root');
+  shadow.append(style, root);
+  return root;
+}
+
+/**
+ * Mounts the toggle button into `anchor` and the panel into `panelAnchor`, each in a closed shadow root.
+ * The panel sits outside the page's button row so opening it never reflows the buttons; without a
+ * `panelAnchor` (older pages) it goes under the button.
+ */
+export function mountPicker(anchor: HTMLElement, panelAnchor: HTMLElement | null, getReady: () => ReadyInfo): void {
+  const root = shadowRoot(anchor);
   const toggle = el('button', 'btn', 'Remove calendar conflicts');
   toggle.type = 'button';
   const panel = el('div', 'panel');
   panel.hidden = true;
-  root.append(toggle, panel);
-  shadow.append(style, root);
+  root.append(toggle);
+  (panelAnchor ? shadowRoot(panelAnchor) : root).append(panel);
 
   let busy = false;
 
