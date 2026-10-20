@@ -1,5 +1,5 @@
 import { ext } from '../platform.ts';
-import { getSettings, originPattern, type Account } from '../storage.ts';
+import { DEFAULT_KRABBE_URL, getSettings, originPattern, type Account } from '../storage.ts';
 
 const SCRIPT_ID = 'krabbe-bridge';
 
@@ -26,7 +26,9 @@ export async function syncContentScript(
         return false;
       }
     });
-    if (old !== pattern && !usedByAccount) await ext.permissions.remove({ origins: [old] });
+    // The default origin is a required manifest permission and can't be removed.
+    const required = old === originPattern(DEFAULT_KRABBE_URL);
+    if (old !== pattern && !usedByAccount && !required) await ext.permissions.remove({ origins: [old] });
   }
 }
 
