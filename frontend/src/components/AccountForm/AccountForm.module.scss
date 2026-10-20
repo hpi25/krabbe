@@ -1,0 +1,14 @@
+.wrapper {
+  margin-block: 30px 60px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+
+  & > div {
+    width: 100%;
+  }
+}

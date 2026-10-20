@@ -12,6 +12,7 @@ import { useTranslation } from '/src/i18n/server'
 import { makeClass, relativeTimeFormat } from '/src/utils'
 
 import EventAvailabilities from './EventAvailabilities'
+import EventOwnerControls from './EventOwnerControls'
 import styles from './page.module.scss'
 
 interface PageProps {
@@ -57,6 +58,8 @@ const Page = async ({ params }: PageProps) => {
         <p className={makeClass(styles.info, styles.noPrint)}>
           <Trans i18nKey="event:nav.shareinfo" t={t} i18n={i18n}>_<a href={`mailto:?subject=${encodeURIComponent(t('event:nav.email_subject', { event_name: event.name }))}&body=${encodeURIComponent(`${t('event:nav.email_body')} ${getFrontendUrl()}/${event.id}`)}`}>_</a>_</Trans>
         </p>
+
+        <EventOwnerControls event={event} frontendUrl={getFrontendUrl()} />
       </Content>
     </Suspense>
 

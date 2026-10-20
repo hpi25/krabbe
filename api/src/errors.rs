@@ -5,6 +5,9 @@ pub enum ApiError<A: Adaptor> {
     AdaptorError(A::Error),
     NotFound,
     NotAuthorized,
+    Forbidden,
+    Conflict,
+    InvalidInput(&'static str),
 }
 
 // Define what the error types above should return
@@ -17,6 +20,11 @@ impl<A: Adaptor> IntoResponse for ApiError<A> {
             }
             ApiError::NotFound => StatusCode::NOT_FOUND.into_response(),
             ApiError::NotAuthorized => StatusCode::UNAUTHORIZED.into_response(),
+            ApiError::Forbidden => StatusCode::FORBIDDEN.into_response(),
+            ApiError::Conflict => StatusCode::CONFLICT.into_response(),
+            ApiError::InvalidInput(message) => {
+                (StatusCode::UNPROCESSABLE_ENTITY, message).into_response()
+            }
         }
     }
 }

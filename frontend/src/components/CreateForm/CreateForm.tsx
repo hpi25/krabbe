@@ -11,11 +11,12 @@ import { default as ErrorAlert } from '/src/components/Error/Error'
 import SelectField from '/src/components/SelectField/SelectField'
 import TextField from '/src/components/TextField/TextField'
 import TimeRangeField from '/src/components/TimeRangeField/TimeRangeField'
-import { createEvent, EventResponse } from '/src/config/api'
+import { createEvent, EventResponse, updateEvent } from '/src/config/api'
 import { useTranslation } from '/src/i18n/client'
 import timezones from '/src/res/timezones.json'
+import useAccountStore from '/src/stores/accountStore'
 import useRecentsStore from '/src/stores/recentsStore'
-import { range } from '/src/utils'
+import { range, timesToRange } from '/src/utils'
 
 import EventInfo from './components/EventInfo/EventInfo'
 import styles from './CreateForm.module.scss'
@@ -38,17 +39,33 @@ const defaultValues: Fields = {
   timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
 }
 
-const CreateForm = ({ noRedirect, frontendUrl }: { noRedirect?: boolean, frontendUrl: string }) => {
+interface CreateFormProps {
+  noRedirect?: boolean
+  frontendUrl: string
+  /** Edit this event instead of creating a new one */
+  event?: EventResponse
+  onSaved?: (event: EventResponse) => void
+}
+
+const CreateForm = ({ noRedirect, frontendUrl, event, onSaved }: CreateFormProps) => {
   const { t } = useTranslation('home')
   const { push } = useRouter()
 
   const addRecent = useRecentsStore(state => state.addRecent)
+  const session = useAccountStore(state => state.session)
+  const clearSession = useAccountStore(state => state.clearSession)
 
   const {
     register,
     handleSubmit,
     control,
-  } = useForm({ defaultValues })
+  } = useForm<Fields>({
+    defaultValues: event ? {
+      name: event.name,
+      ...timesToRange(event.times, event.timezone),
+      timezone: event.timezone,
+    } : defaultValues,
+  })
 
   const [isLoading, setIsLoading] = useState(false)
   const [createdEvent, setCreatedEvent] = useState<EventResponse>()
@@ -96,7 +113,25 @@ const CreateForm = ({ noRedirect, frontendUrl }: { noRedirect?: boolean, fronten
         return setError(t('form.errors.no_time'))
       }
 
-      const newEvent = await createEvent({ name, times, timezone }).catch(e => {
+      if (event) {
+        if (!session) throw new Error('Not logged in')
+        const updatedEvent = await updateEvent(event.id, { name, times, timezone }, session.token)
+        addRecent({
+          id: updatedEvent.id,
+          name: updatedEvent.name,
+          created_at: updatedEvent.created_at,
+        })
+        return onSaved?.(updatedEvent)
+      }
+
+      const newEvent = await createEvent({ name, times, timezone }, session?.token).catch(e => {
+        // The session expired, so create the event without an owner
+        if (session && e && typeof e === 'object' && 'status' in e && e.status === 401) {
+          clearSession()
+          return createEvent({ name, times, timezone })
+        }
+        throw e
+      }).catch(e => {
         console.error(e)
         throw new Error('Failed to create event')
       })
@@ -122,9 +157,9 @@ const CreateForm = ({ noRedirect, frontendUrl }: { noRedirect?: boolean, fronten
   }
 
   return createdEvent ? <EventInfo event={createdEvent} frontendUrl={frontendUrl} /> : <form
-    style={{ marginBlockEnd: noRedirect ? 30 : 60 }}
+    style={{ marginBlockEnd: noRedirect || event ? 30 : 60 }}
     onSubmit={handleSubmit(onSubmit)}
-    id="create"
+    id={event ? 'edit' : 'create'}
   >
     <TextField
       label={t('form.name.label')}
@@ -163,7 +198,7 @@ const CreateForm = ({ noRedirect, frontendUrl }: { noRedirect?: boolean, fronten
         isLoading={isLoading}
         disabled={isLoading}
         style={noRedirect ? { width: '100%' } : undefined}
-      >{t('form.button')}</Button>
+      >{event ? t('form.save_button') : t('form.button')}</Button>
     </div>
   </form>
 }

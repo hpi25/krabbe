@@ -30,6 +30,13 @@ pub trait Adaptor: Send + Sync {
     ) -> impl Future<Output = Result<Option<Event>, Self::Error>> + Send;
     fn create_event(&self, event: Event)
     -> impl Future<Output = Result<Event, Self::Error>> + Send;
+    /// Update an existing event's details, returns None if the event doesn't exist
+    fn update_event(
+        &self,
+        event: Event,
+    ) -> impl Future<Output = Result<Option<Event>, Self::Error>> + Send;
+    /// Delete an event and its associated people, returns false if the event doesn't exist
+    fn delete_event(&self, id: String) -> impl Future<Output = Result<bool, Self::Error>> + Send;
 
     /// Delete events older than a cutoff date, as well as any associated people
     /// Returns the amount of events and people deleted
@@ -37,6 +44,28 @@ pub trait Adaptor: Send + Sync {
         &self,
         cutoff: DateTime<Utc>,
     ) -> impl Future<Output = Result<Stats, Self::Error>> + Send;
+
+    fn get_user(
+        &self,
+        username: String,
+    ) -> impl Future<Output = Result<Option<User>, Self::Error>> + Send;
+    fn create_user(&self, user: User) -> impl Future<Output = Result<User, Self::Error>> + Send;
+
+    fn get_session(
+        &self,
+        token_hash: String,
+    ) -> impl Future<Output = Result<Option<Session>, Self::Error>> + Send;
+    fn create_session(
+        &self,
+        session: Session,
+    ) -> impl Future<Output = Result<Session, Self::Error>> + Send;
+    fn delete_session(&self, token_hash: String)
+    -> impl Future<Output = Result<(), Self::Error>> + Send;
+    /// Delete sessions created before a cutoff date, returns the amount deleted
+    fn delete_sessions(
+        &self,
+        cutoff: DateTime<Utc>,
+    ) -> impl Future<Output = Result<i64, Self::Error>> + Send;
 }
 
 #[derive(Clone)]
@@ -53,12 +82,34 @@ pub struct Event {
     pub visited_at: DateTime<Utc>,
     pub times: Vec<String>,
     pub timezone: String,
+    /// Username of the registered user that created the event
+    pub owner: Option<String>,
 }
 
 #[derive(Clone)]
 pub struct Person {
+    /// Unique within an event. People belonging to a registered user
+    /// are named after their username with an `@` prefix, e.g. `@crab`
     pub name: String,
     pub password_hash: Option<String>,
     pub created_at: DateTime<Utc>,
     pub availability: Vec<String>,
+}
+
+/// A registered user of this instance
+#[derive(Clone)]
+pub struct User {
+    /// Unique and lowercase
+    pub username: String,
+    pub display_name: String,
+    pub password_hash: String,
+    pub created_at: DateTime<Utc>,
+}
+
+#[derive(Clone)]
+pub struct Session {
+    /// SHA-256 hash of the session token, so tokens can't be recovered from storage
+    pub token_hash: String,
+    pub username: String,
+    pub created_at: DateTime<Utc>,
 }

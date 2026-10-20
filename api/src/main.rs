@@ -3,7 +3,7 @@ use std::{env, net::SocketAddr, sync::Arc};
 use axum::{
     Router, extract,
     http::{
-        HeaderValue, Method,
+        HeaderName, HeaderValue, Method,
         header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE},
     },
     routing::{get, patch, post},
@@ -17,9 +17,11 @@ use utoipa::{OpenApi, openapi::Server};
 use utoipa_swagger_ui::SwaggerUi;
 
 use crate::adaptors::create_adaptor;
+use crate::auth::SESSION_HEADER;
 use crate::docs::ApiDoc;
 
 mod adaptors;
+mod auth;
 mod docs;
 mod errors;
 mod payloads;
@@ -50,8 +52,13 @@ async fn serve() {
     // CORS configuration
     let cors = CorsLayer::new()
         .allow_credentials(true)
-        .allow_headers([AUTHORIZATION, ACCEPT, CONTENT_TYPE])
-        .allow_methods([Method::GET, Method::POST, Method::PATCH])
+        .allow_headers([
+            AUTHORIZATION,
+            ACCEPT,
+            CONTENT_TYPE,
+            HeaderName::from_static(SESSION_HEADER),
+        ])
+        .allow_methods([Method::GET, Method::POST, Method::PATCH, Method::DELETE])
         .allow_origin(
             if cfg!(debug_assertions) {
                 "http://localhost:1234".to_owned()
@@ -89,7 +96,12 @@ async fn serve() {
         .route("/", get(get_root))
         .route("/stats", get(stats::get_stats))
         .route("/event", post(event::create_event))
-        .route("/event/{event_id}", get(event::get_event))
+        .route(
+            "/event/{event_id}",
+            get(event::get_event)
+                .patch(event::update_event)
+                .delete(event::delete_event),
+        )
         .route("/event/{event_id}/people", get(person::get_people))
         .route(
             "/event/{event_id}/people/{person_name}",
@@ -99,6 +111,10 @@ async fn serve() {
             "/event/{event_id}/people/{person_name}",
             patch(person::update_person),
         )
+        .route("/user/register", post(user::register))
+        .route("/user/login", post(user::login))
+        .route("/user/logout", post(user::logout))
+        .route("/user/me", get(user::get_me))
         .route("/tasks/cleanup", get(tasks::cleanup))
         .with_state(shared_state);
 

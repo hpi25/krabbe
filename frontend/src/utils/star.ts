@@ -273,9 +273,8 @@ const replaceScoresWithFullScores = (
       return { time: a.time, score }
     })
     return {
-      name: p.name,
+      ...p,
       availability: dropZeroScores(newAvailability),
-      created_at: p.created_at,
     }
   })
 }

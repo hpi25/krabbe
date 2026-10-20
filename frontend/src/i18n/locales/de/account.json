@@ -1,0 +1,24 @@
+{
+  "name": "Konto",
+  "login_title": "Melde dich bei deinem Konto an",
+  "register_title": "Konto erstellen",
+  "info": "Mit einem Konto musst du deinen Namen nicht bei jeder Veranstaltung eingeben und kannst die Veranstaltungen, die du erstellst, bearbeiten oder löschen.",
+  "login_button": "Anmelden",
+  "register_button": "Registrieren",
+  "logout_button": "Abmelden",
+  "username": "Benutzername",
+  "username_description": "Eindeutig, 3 bis 32 Buchstaben, Zahlen, Punkte, Binde- oder Unterstriche",
+  "display_name": "Anzeigename",
+  "display_name_description": "Wird anderen bei Veranstaltungen angezeigt",
+  "password": "Passwort",
+  "signed_in": "Angemeldet als {{name}} (@{{username}})",
+  "signed_in_info": "Du wirst bei jeder Veranstaltung, die du öffnest, automatisch angemeldet, und du kannst die Veranstaltungen, die du erstellst, bearbeiten oder löschen.",
+  "errors": {
+    "username_invalid": "Benutzernamen müssen aus 3 bis 32 Buchstaben, Zahlen, Punkten, Binde- oder Unterstrichen bestehen.",
+    "username_taken": "Dieser Benutzername ist bereits vergeben.",
+    "display_name_required": "Ein Anzeigename wird benötigt.",
+    "password_short": "Passwörter müssen mindestens 8 Zeichen lang sein.",
+    "login_incorrect": "Benutzername oder Passwort ist falsch.",
+    "unknown": "Etwas ist schiefgelaufen. Bitte versuche es erneut."
+  }
+}

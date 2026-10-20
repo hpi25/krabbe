@@ -2,6 +2,8 @@
 
 pub mod prelude;
 
+pub mod account;
 pub mod event;
 pub mod person;
+pub mod session;
 pub mod stats;

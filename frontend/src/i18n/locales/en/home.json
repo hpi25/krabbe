@@ -36,7 +36,8 @@
       "same_times": "The start and end times can't be the same",
       "no_time": "There isn't any time selected",
       "unknown": "Something went wrong. Please try again later."
-    }
+    },
+    "save_button": "Save changes"
   },
   "about": {
     "name": "About $t(common:name)",

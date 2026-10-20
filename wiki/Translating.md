@@ -21,6 +21,7 @@ You can also check the resource you're translating for info on where you can fin
 | home.json | Strings used on the homepage, including the event creation form and the about info. |
 | help.json | Strings used on the [help page](https://starbestfit.com/how-to). |
 | event.json | Strings used on an event's page, including heatmap and filtering terminology. |
+| account.json | Strings used on the account page, for logging in and registering. |
 
 ### What should I do if my language is fully translated?
 

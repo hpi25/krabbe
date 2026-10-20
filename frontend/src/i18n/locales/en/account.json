@@ -1,0 +1,24 @@
+{
+  "name": "Account",
+  "login_title": "Log in to your account",
+  "register_title": "Create an account",
+  "info": "With an account you don't need to enter your name on every event, and you can edit or delete the events you create.",
+  "login_button": "Log in",
+  "register_button": "Register",
+  "logout_button": "Log out",
+  "username": "Username",
+  "username_description": "Unique, 3 to 32 letters, numbers, dots, dashes or underscores",
+  "display_name": "Display name",
+  "display_name_description": "Shown to others on events",
+  "password": "Password",
+  "signed_in": "Logged in as {{name}} (@{{username}})",
+  "signed_in_info": "You will automatically be signed in on every event you open, and events you create can be edited or deleted by you.",
+  "errors": {
+    "username_invalid": "Usernames must be 3 to 32 letters, numbers, dots, dashes or underscores.",
+    "username_taken": "That username is already taken.",
+    "display_name_required": "A display name is needed.",
+    "password_short": "Passwords must be at least 8 characters long.",
+    "login_incorrect": "Username or password is incorrect.",
+    "unknown": "Something went wrong. Please try again."
+  }
+}

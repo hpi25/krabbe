@@ -13,7 +13,7 @@ import { usePalette } from '/src/hooks/usePalette'
 import { useTranslation } from '/src/i18n/client'
 import { useStore } from '/src/stores'
 import useSettingsStore from '/src/stores/settingsStore'
-import { calculateAvailability, calculateTable, makeClass, NameScore, relativeTimeFormat } from '/src/utils'
+import { calculateAvailability, calculateTable, getDisplayNames, makeClass, NameScore, relativeTimeFormat } from '/src/utils'
 import { averageAndRound, calculateBestTime, calculateTimeMap, MAXSCORE } from '/src/utils/star'
 import { timeToLocaleString } from '/src/utils/timeToLocaleString'
 
@@ -66,11 +66,14 @@ const AvailabilityViewer = ({ times, people, table, eventId, timeFormat, timezon
     setFilteredPeople(people.map(p => p.name))
   }
 
+  // Names to show, which differ from the unique names for registered users
+  const displayNames = useMemo(() => getDisplayNames(people), [people])
+
   // add the score to each name
   const formatNameScores = (nameScores: NameScore[]): string[] => {
     return nameScores
       .sort((p1, p2) => p2.score - p1.score) // sort descending by score
-      .map(p => `${p.name} (${p.score})`)
+      .map(p => `${displayNames.get(p.name) ?? p.name} (${p.score})`)
   }
 
   /* STAR results computation and formatting */
@@ -208,6 +211,7 @@ const AvailabilityViewer = ({ times, people, table, eventId, timeFormat, timezon
     tempFocus,
     focusCount,
     filteredPeople,
+    displayNames,
   ])
 
   return <>
@@ -244,7 +248,7 @@ const AvailabilityViewer = ({ times, people, table, eventId, timeFormat, timezon
               onMouseOver={() => setTempFocus(person.name)}
               onMouseOut={() => setTempFocus(undefined)}
               title={relativeTimeFormat(Temporal.Instant.fromEpochMilliseconds(person.created_at * 1000), i18n.language)}
-            >{person.name}</button>
+            >{displayNames.get(person.name) ?? person.name}</button>
           )}
         </div>
       </>}

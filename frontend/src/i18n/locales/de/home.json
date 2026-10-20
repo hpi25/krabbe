@@ -36,7 +36,8 @@
       "same_times": "Bitte gib verschiedene Start- und Endzeiten an.",
       "no_time": "Bitte gib eine Start- und Endzeit an.",
       "unknown": "Es ist ein Fehler aufgetaucht. Bitte versuche es später noch einmal."
-    }
+    },
+    "save_button": "Änderungen speichern"
   },
   "about": {
     "name": "Über $t(common:name)",
