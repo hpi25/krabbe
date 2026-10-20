@@ -4,11 +4,13 @@ import { z } from 'zod'
 
 import { MAXSCORE } from '../utils/star'
 
-if (process.env.NEXT_PUBLIC_API_URL === undefined) {
-  throw new Error('Expected API url environment variable')
+// The API url can be relative (e.g. /api) when served from the same domain as the frontend.
+// Server-side requests can't resolve a relative url, so API_URL can be set at runtime
+// to an absolute url (e.g. http://api:3000/api) that the server uses instead.
+const getApiUrl = (path: string) => {
+  const base = (typeof window === 'undefined' && process.env.API_URL) || process.env.NEXT_PUBLIC_API_URL || '/api'
+  return `${base.replace(/\/+$/, '')}${path}`
 }
-
-const API_BASE = new URL(process.env.NEXT_PUBLIC_API_URL)
 
 export const EventInput = z.object({
   name: z.string().optional(),
@@ -91,7 +93,7 @@ export const StatsResponse = z.object({
 export type StatsResponse = z.infer<typeof StatsResponse>
 
 const get = async <S extends z.ZodType>(url: string, schema: S, auth?: string, nextOptions?: NextFetchRequestConfig): Promise<z.infer<S>> => {
-  const res = await fetch(new URL(url, API_BASE), {
+  const res = await fetch(getApiUrl(url), {
     headers: {
       ...auth && { Authorization: `Bearer ${auth}` },
     },
@@ -103,7 +105,7 @@ const get = async <S extends z.ZodType>(url: string, schema: S, auth?: string, n
 }
 
 const post = async <S extends z.ZodType>(url: string, schema: S, input: unknown, auth?: string, method = 'POST'): Promise<z.infer<S>> => {
-  const res = await fetch(new URL(url, API_BASE), {
+  const res = await fetch(getApiUrl(url), {
     method,
     headers: {
       'Content-Type': 'application/json',

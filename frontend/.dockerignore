@@ -1,0 +1,10 @@
+node_modules
+.next
+.env*
+.vscode
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+tsconfig.tsbuildinfo
+Containerfile

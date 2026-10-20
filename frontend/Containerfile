@@ -1,0 +1,59 @@
+# Builds the Next.js frontend as a standalone server
+# Compatible with both `docker build -f Containerfile` and `podman build`
+
+FROM docker.io/library/node:26-slim AS base
+
+# Corepack is no longer bundled with Node.js, and provides the yarn version pinned in package.json
+RUN npm install --global corepack && corepack enable
+
+ENV NEXT_TELEMETRY_DISABLED=1
+
+WORKDIR /app
+
+# Install dependencies
+FROM base AS deps
+
+COPY package.json yarn.lock .yarnrc.yml ./
+RUN --mount=type=cache,target=/root/.yarn/berry/cache \
+    yarn install --immutable
+
+# Build the app
+FROM base AS builder
+
+# NEXT_PUBLIC_* variables are inlined into the bundle at build time
+# The API url defaults to /api on the same domain as the frontend
+ARG NEXT_PUBLIC_API_URL=/api
+ARG NEXT_PUBLIC_GOOGLE_CLIENT_ID
+ARG NEXT_PUBLIC_GOOGLE_API_KEY
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL \
+    NEXT_PUBLIC_GOOGLE_CLIENT_ID=$NEXT_PUBLIC_GOOGLE_CLIENT_ID \
+    NEXT_PUBLIC_GOOGLE_API_KEY=$NEXT_PUBLIC_GOOGLE_API_KEY
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+RUN yarn build
+
+# Runtime image
+FROM docker.io/library/node:26-slim
+
+ENV NODE_ENV=production \
+    NEXT_TELEMETRY_DISABLED=1 \
+    HOSTNAME=0.0.0.0 \
+    PORT=3000
+
+# Set API_URL to an absolute url (e.g. http://api:3000/api) for server-side requests
+# when the API url is relative
+
+WORKDIR /app
+
+# Get the standalone server and static assets from the builder
+COPY --from=builder --chown=node:node /app/public ./public
+COPY --from=builder --chown=node:node /app/.next/standalone ./
+COPY --from=builder --chown=node:node /app/.next/static ./.next/static
+
+# Run as the unprivileged "node" user that ships with the image
+USER node
+
+# Run the app
+EXPOSE 3000
+CMD ["node", "server.js"]

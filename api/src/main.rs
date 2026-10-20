@@ -13,7 +13,7 @@ use tokio::{net::TcpListener, sync::Mutex};
 use tower_governor::{GovernorLayer, governor::GovernorConfigBuilder};
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
 use tracing::Level;
-use utoipa::OpenApi;
+use utoipa::{OpenApi, openapi::Server};
 use utoipa_swagger_ui::SwaggerUi;
 
 use crate::adaptors::create_adaptor;
@@ -73,8 +73,19 @@ async fn serve() {
             .unwrap(),
     );
 
-    let app = Router::new()
-        .merge(SwaggerUi::new("/docs").url("/docs/openapi.json", ApiDoc::openapi()))
+    // Serve the API under a path prefix if BASE_PATH is set, e.g. "/api"
+    let base_path = match env::var("BASE_PATH").unwrap_or_default().trim_matches('/') {
+        "" => String::new(),
+        path => format!("/{path}"),
+    };
+
+    // Tell the docs where the API is served from so requests include the prefix
+    let mut openapi = ApiDoc::openapi();
+    if !base_path.is_empty() {
+        openapi.servers = Some(vec![Server::new(&base_path)]);
+    }
+
+    let routes = Router::new()
         .route("/", get(get_root))
         .route("/stats", get(stats::get_stats))
         .route("/event", post(event::create_event))
@@ -89,7 +100,20 @@ async fn serve() {
             patch(person::update_person),
         )
         .route("/tasks/cleanup", get(tasks::cleanup))
-        .with_state(shared_state)
+        .with_state(shared_state);
+
+    // Nesting at the root isn't supported, so only nest when a prefix is set
+    let routes = if base_path.is_empty() {
+        routes
+    } else {
+        Router::new().nest(&base_path, routes)
+    };
+
+    let app = routes
+        .merge(
+            SwaggerUi::new(format!("{base_path}/docs"))
+                .url(format!("{base_path}/docs/openapi.json"), openapi),
+        )
         .layer(cors)
         .layer(rate_limit)
         .layer(TraceLayer::new_for_http());
@@ -97,8 +121,9 @@ async fn serve() {
     let addr = SocketAddr::from(([0, 0, 0, 0], 3000));
 
     println!(
-        "🦀 Crab Fit API listening at http://{} in {} mode",
+        "🦀 Crab Fit API listening at http://{}{} in {} mode",
         addr,
+        base_path,
         if cfg!(debug_assertions) {
             "debug"
         } else {

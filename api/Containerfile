@@ -1,6 +1,7 @@
-# This dockerfile builds the API and runs it on a minimal container with the SQL adaptor
+# Builds the API with the SQL adaptor and runs it on a minimal image
+# Compatible with both `docker build -f Containerfile` and `podman build`
 
-FROM rust:trixie AS builder
+FROM docker.io/library/rust:trixie AS builder
 
 WORKDIR /usr/src/app
 
@@ -11,11 +12,11 @@ RUN rustup toolchain install
 COPY . .
 # Will build and cache the binary and dependent crates in release mode
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
-    --mount=type=cache,target=target \
+    --mount=type=cache,target=/usr/src/app/target \
     cargo build --release --features sql-adaptor && mv ./target/release/crabfit-api ./api
 
 # Runtime image
-FROM debian:trixie-slim
+FROM docker.io/library/debian:trixie-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates openssl && rm -rf /var/lib/apt/lists/*
 
