@@ -138,3 +138,63 @@ test('REPORT failure throws CalDavError with status', async () => {
     (e: unknown) => e instanceof CalDavError && e.status === 500,
   );
 });
+
+const crossMsg = /redirected to another host \(https:\/\/evil\.example\), which is not supported/;
+
+test('cross-origin home-set href is refused and never contacted', async () => {
+  const { fetchFn, calls } = fakeFetch((method, url, body) => {
+    if (method !== 'PROPFIND') return undefined;
+    if (url === 'https://rad.example/') return { body: fx('rad-principal.xml') };
+    if (url === 'https://rad.example/alice/') {
+      return {
+        body: body.includes('calendar-home-set')
+          ? `<multistatus xmlns="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav"><response><href>/alice/</href><propstat><prop><C:calendar-home-set><href>https://evil.example/alice/</href></C:calendar-home-set></prop><status>HTTP/1.1 200 OK</status></propstat></response></multistatus>`
+          : fx('rad-calendars.xml'),
+      };
+    }
+    return undefined;
+  });
+  await assert.rejects(
+    discoverCalendars({ ...creds, serverUrl: 'https://rad.example/' }, fetchFn),
+    (e: unknown) => e instanceof CalDavError && crossMsg.test(e.message),
+  );
+  assert.ok(calls.every((c) => new URL(c.url).origin === 'https://rad.example'));
+  assert.ok(calls.length > 0);
+});
+
+test('well-known redirecting cross-origin falls back to serverUrl', async () => {
+  const { fetchFn, calls } = fakeFetch((method, url, body) => {
+    if (method !== 'PROPFIND') return undefined;
+    if (url === 'https://rad.example/.well-known/caldav') return { body: '<d:multistatus xmlns:d="DAV:"/>', url: 'https://evil.example/dav/' };
+    if (url === 'https://rad.example/') return { body: fx('rad-principal.xml') };
+    if (url === 'https://rad.example/alice/') {
+      return { body: fx(body.includes('calendar-home-set') ? 'rad-homeset.xml' : 'rad-calendars.xml') };
+    }
+    return undefined;
+  });
+  const cals = await discoverCalendars({ ...creds, serverUrl: 'https://rad.example/' }, fetchFn);
+  assert.equal(cals.length, 1);
+  assert.ok(calls.every((c) => new URL(c.url).origin === 'https://rad.example'));
+});
+
+test('fetchCalendarData refuses a cross-origin calendar url without sending anything', async () => {
+  const { fetchFn, calls } = fakeFetch(() => ({ body: '' }));
+  await assert.rejects(
+    fetchCalendarData(creds, 'https://evil.example/c/', new Date(0), new Date(1000), fetchFn),
+    (e: unknown) => e instanceof CalDavError && crossMsg.test(e.message),
+  );
+  assert.equal(calls.length, 0);
+});
+
+test('request timeouts surface as a CalDavError saying so', async () => {
+  const seen: (AbortSignal | null | undefined)[] = [];
+  const fetchFn = (async (_u: unknown, init?: RequestInit) => {
+    seen.push(init?.signal);
+    throw new DOMException('The operation timed out.', 'TimeoutError');
+  }) as typeof fetch;
+  await assert.rejects(
+    fetchCalendarData(creds, 'https://cloud.example/c/', new Date(0), new Date(1000), fetchFn),
+    (e: unknown) => e instanceof CalDavError && /timed out/.test(e.message),
+  );
+  assert.ok(seen[0] instanceof AbortSignal);
+});

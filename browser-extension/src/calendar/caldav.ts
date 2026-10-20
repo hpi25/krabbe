@@ -30,6 +30,16 @@ interface DavResponse {
   url: string;
 }
 
+const REQUEST_TIMEOUT_MS = 20_000;
+
+/** Credentials only ever go to the server's own origin. */
+function assertSameOrigin(creds: Credentials, url: string): void {
+  const origin = new URL(url).origin;
+  if (origin !== new URL(creds.serverUrl).origin) {
+    throw new CalDavError(`Calendar server redirected to another host (${origin}), which is not supported`);
+  }
+}
+
 async function dav(
   creds: Credentials,
   fetchFn: typeof fetch,
@@ -38,6 +48,7 @@ async function dav(
   depth: '0' | '1',
   body: string,
 ): Promise<DavResponse> {
+  assertSameOrigin(creds, url);
   let res: Response;
   try {
     res = await fetchFn(url, {
@@ -49,12 +60,18 @@ async function dav(
         'Content-Type': 'application/xml; charset=utf-8',
       },
       body,
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     });
   } catch (e) {
+    if (e instanceof Error && (e.name === 'TimeoutError' || e.name === 'AbortError')) {
+      throw new CalDavError(`${method} ${url} failed: the server timed out after ${REQUEST_TIMEOUT_MS / 1000}s`);
+    }
     throw new CalDavError(`${method} ${url} failed: ${e instanceof Error ? e.message : String(e)}`);
   }
   if (!res.ok) throw new CalDavError(`${method} ${url} returned HTTP ${res.status}`, res.status);
-  return { text: await res.text(), url: res.url || url };
+  const finalUrl = res.url || url;
+  assertSameOrigin(creds, finalUrl);
+  return { text: await res.text(), url: finalUrl };
 }
 
 type Node = Record<string, unknown>;
@@ -141,6 +158,7 @@ export async function discoverCalendars(
     // A missing component set means "unrestricted" per RFC 4791.
     if (comps.length > 0 && !comps.some((c) => String(c['@_name']).toUpperCase() === 'VEVENT')) continue;
     const url = new URL(href, home.url).href;
+    assertSameOrigin(creds, url);
     out.push({ url, name: text(prop['displayname']) ?? url, color: text(prop['calendar-color']) });
   }
   return out;
