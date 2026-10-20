@@ -1,0 +1,174 @@
+import { XMLParser } from 'fast-xml-parser';
+import type { Account, CalendarSettings } from '../storage.ts';
+
+export type Credentials = Pick<Account, 'serverUrl' | 'username' | 'password'>;
+
+export class CalDavError extends Error {
+  status?: number;
+  constructor(message: string, status?: number) {
+    super(message);
+    this.name = 'CalDavError';
+    if (status !== undefined) this.status = status;
+  }
+}
+
+const parser = new XMLParser({
+  removeNSPrefix: true,
+  ignoreAttributes: false,
+  parseTagValue: false,
+  isArray: (name) => ['response', 'propstat', 'comp'].includes(name),
+});
+
+function basicAuth(c: Credentials): string {
+  const bytes = new TextEncoder().encode(`${c.username}:${c.password}`);
+  return 'Basic ' + btoa(String.fromCharCode(...bytes));
+}
+
+interface DavResponse {
+  text: string;
+  /** Final URL after redirects; falls back to the request URL. */
+  url: string;
+}
+
+async function dav(
+  creds: Credentials,
+  fetchFn: typeof fetch,
+  method: 'PROPFIND' | 'REPORT',
+  url: string,
+  depth: '0' | '1',
+  body: string,
+): Promise<DavResponse> {
+  let res: Response;
+  try {
+    res = await fetchFn(url, {
+      method,
+      credentials: 'omit',
+      headers: {
+        Authorization: basicAuth(creds),
+        Depth: depth,
+        'Content-Type': 'application/xml; charset=utf-8',
+      },
+      body,
+    });
+  } catch (e) {
+    throw new CalDavError(`${method} ${url} failed: ${e instanceof Error ? e.message : String(e)}`);
+  }
+  if (!res.ok) throw new CalDavError(`${method} ${url} returned HTTP ${res.status}`, res.status);
+  return { text: await res.text(), url: res.url || url };
+}
+
+type Node = Record<string, unknown>;
+
+function asArray<T>(v: T | T[] | undefined): T[] {
+  return v === undefined ? [] : Array.isArray(v) ? v : [v];
+}
+
+/** Text of a parsed element: plain string, or the `#text` of an element with attributes. */
+function text(v: unknown): string | undefined {
+  if (typeof v === 'string') return v.trim() || undefined;
+  if (v && typeof v === 'object' && '#text' in v) return text((v as Node)['#text']);
+  return undefined;
+}
+
+/** Each response's href plus the merged props of its 2xx propstats. */
+function parseMultistatus(xml: string): { href: string; prop: Node }[] {
+  const root = parser.parse(xml) as { multistatus?: { response?: Node[] } };
+  return (root.multistatus?.response ?? []).map((r) => {
+    const prop: Node = {};
+    for (const ps of asArray(r['propstat'] as Node[] | undefined)) {
+      if (!/\s2\d\d\b/.test(String(ps['status'] ?? ' 200'))) continue;
+      Object.assign(prop, ps['prop'] as Node | undefined);
+    }
+    return { href: text(r['href']) ?? '', prop };
+  });
+}
+
+function propfindBody(prop: string): string {
+  return `<?xml version="1.0" encoding="utf-8"?><d:propfind xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav" xmlns:a="http://apple.com/ns/ical/"><d:prop>${prop}</d:prop></d:propfind>`;
+}
+
+function hrefProp(prop: Node, name: string): string | undefined {
+  const v = prop[name];
+  return v && typeof v === 'object' ? text((v as Node)['href']) : undefined;
+}
+
+export async function discoverCalendars(
+  creds: Credentials,
+  fetchFn: typeof fetch = globalThis.fetch,
+): Promise<Omit<CalendarSettings, 'countAllDay'>[]> {
+  const principalBody = propfindBody('<d:current-user-principal/>');
+  const base = new URL(creds.serverUrl);
+
+  // 1. Well-known only locates the DAV root (its post-redirect URL); fall back to the configured URL.
+  let rootUrl: string;
+  try {
+    rootUrl = (await dav(creds, fetchFn, 'PROPFIND', new URL('/.well-known/caldav', base).href, '0', principalBody)).url;
+  } catch (e) {
+    if (e instanceof CalDavError && e.status === 401) throw e;
+    rootUrl = base.href;
+  }
+
+  // 2. Principal.
+  const root = await dav(creds, fetchFn, 'PROPFIND', rootUrl, '0', principalBody);
+  const principalHref = parseMultistatus(root.text)
+    .map((r) => hrefProp(r.prop, 'current-user-principal'))
+    .find((h) => h);
+  if (!principalHref) throw new CalDavError('Server did not report a current-user-principal');
+  const principalUrl = new URL(principalHref, root.url).href;
+
+  // 3. Calendar home set.
+  const principal = await dav(creds, fetchFn, 'PROPFIND', principalUrl, '0', propfindBody('<c:calendar-home-set/>'));
+  const homeHref = parseMultistatus(principal.text)
+    .map((r) => hrefProp(r.prop, 'calendar-home-set'))
+    .find((h) => h);
+  if (!homeHref) throw new CalDavError('Server did not report a calendar-home-set');
+  const homeUrl = new URL(homeHref, principal.url).href;
+
+  // 4. Calendars in the home set.
+  const home = await dav(
+    creds,
+    fetchFn,
+    'PROPFIND',
+    homeUrl,
+    '1',
+    propfindBody('<d:resourcetype/><d:displayname/><a:calendar-color/><c:supported-calendar-component-set/>'),
+  );
+  const out: Omit<CalendarSettings, 'countAllDay'>[] = [];
+  for (const { href, prop } of parseMultistatus(home.text)) {
+    const rt = prop['resourcetype'];
+    if (!rt || typeof rt !== 'object' || !('calendar' in rt)) continue;
+    const comps = asArray((prop['supported-calendar-component-set'] as Node | undefined)?.['comp'] as Node[] | undefined);
+    // A missing component set means "unrestricted" per RFC 4791.
+    if (comps.length > 0 && !comps.some((c) => String(c['@_name']).toUpperCase() === 'VEVENT')) continue;
+    const url = new URL(href, home.url).href;
+    out.push({ url, name: text(prop['displayname']) ?? url, color: text(prop['calendar-color']) });
+  }
+  return out;
+}
+
+function icalUtc(d: Date): string {
+  return d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z');
+}
+
+export async function fetchCalendarData(
+  creds: Credentials,
+  calendarUrl: string,
+  start: Date,
+  end: Date,
+  fetchFn: typeof fetch = globalThis.fetch,
+): Promise<string[]> {
+  const range = `start="${icalUtc(start)}" end="${icalUtc(end)}"`;
+  const body =
+    `<?xml version="1.0" encoding="utf-8"?>` +
+    `<c:calendar-query xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav"><d:prop>` +
+    `<c:calendar-data><c:expand ${range}/></c:calendar-data></d:prop>` +
+    `<c:filter><c:comp-filter name="VCALENDAR"><c:comp-filter name="VEVENT">` +
+    `<c:time-range ${range}/></c:comp-filter></c:comp-filter></c:filter></c:calendar-query>`;
+  const res = await dav(creds, fetchFn, 'REPORT', calendarUrl, '1', body);
+  const out: string[] = [];
+  for (const { prop } of parseMultistatus(res.text)) {
+    const data = text(prop['calendar-data']);
+    if (data) out.push(data);
+  }
+  return out;
+}
