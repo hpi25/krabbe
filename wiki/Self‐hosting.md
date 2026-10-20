@@ -38,7 +38,7 @@ After you have chosen your infrastructure, you'll need to make sure the correct 
 
 | Variable | Example | About |
 | --- | --- | --- |
-| `NEXT_PUBLIC_API_URL` | `https://api.starbestfit.com` | This needs to be set to where your API will be hosted, so the frontend can communicate with it. Defaults to `/api`, which is relative to the frontend's domain. |
+| `NEXT_PUBLIC_API_URL` | `https://krabbe.hpi.church/api` | This needs to be set to where your API will be hosted, so the frontend can communicate with it. Defaults to `/api`, which is relative to the frontend's domain. |
 | `API_URL` | `http://api:3000/api` | An absolute url the frontend server uses to reach the API. Required when `NEXT_PUBLIC_API_URL` is relative, as server-side requests can't resolve relative urls. Read at runtime. |
 | `FRONTEND_URL` | `https://krabbe.example.com` | The public address of the frontend, used for share links, metadata and the sitemap. Defaults to `http://localhost:1234`. Read at runtime. |
 | `FRONTEND_URL` | `https://krabbe.example.com` | The public address of the frontend, used for share links, metadata and the sitemap. Defaults to `http://localhost:1234`. Read at runtime. |
@@ -49,7 +49,7 @@ After you have chosen your infrastructure, you'll need to make sure the correct 
 
 | Variable | Example | About |
 | --- | --- | --- |
-| `FRONTEND_URL` | `https://starbestfit.com` | This needs to be set to the address where your frontend will be hosted, to allow cross-origin requests. If this is set incorrectly you will see CORS errors in the browser console |
+| `FRONTEND_URL` | `https://krabbe.hpi.church` | This needs to be set to the address where your frontend will be hosted, to allow cross-origin requests. If this is set incorrectly you will see CORS errors in the browser console |
 | `CRON_KEY` | `abc123` | This can be any string, and is not required. It can be used to protect the cleanup task endpoint of the API, see the [API README](../api#cleanup-task) for more details. |
 | `BASE_PATH` | `/api` | Serves the API under a path prefix, e.g. to host it on the same domain as the frontend. Not required, see the [API README](../api#base-path) for more details. |
 

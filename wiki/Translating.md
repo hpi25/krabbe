@@ -11,7 +11,7 @@ https://help.transifex.com/en/articles/6318216-translating-with-the-web-editor
 
 ### How can I tell where each string is used?
 
-Visit https://starbestfit.com and try to find the specific string while language is set to English.
+Visit https://krabbe.hpi.church and try to find the specific string while language is set to English.
 
 You can also check the resource you're translating for info on where you can find that string. See the table below for a reference:
 
@@ -19,7 +19,7 @@ You can also check the resource you're translating for info on where you can fin
 | --- | --- |
 | common.json | Common strings used on all pages in places like the header/footer, and settings. |
 | home.json | Strings used on the homepage, including the event creation form and the about info. |
-| help.json | Strings used on the [help page](https://starbestfit.com/how-to). |
+| help.json | Strings used on the [help page](https://krabbe.hpi.church/how-to). |
 | event.json | Strings used on an event's page, including heatmap and filtering terminology. |
 
 ### What should I do if my language is fully translated?
