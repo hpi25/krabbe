@@ -1,38 +1,23 @@
 import { discoverCalendars } from './calendar/caldav.ts';
 import { fetchBusy } from './background/fetchBusy.ts';
+import { routeMessage } from './background/router.ts';
 import { syncContentScript } from './background/contentScript.ts';
 import type { Message } from './messages.ts';
 import { ext } from './platform.ts';
 import { getSettings, originPattern } from './storage.ts';
 
-function errMsg(e: unknown): string {
-  return e instanceof Error ? e.message : String(e);
-}
+const routerDeps = {
+  getSettings,
+  fetchBusy,
+  discoverCalendars,
+  openOptionsPage: () => ext.runtime.openOptionsPage(),
+};
 
 type Listener = Parameters<typeof ext.runtime.onMessage.addListener>[0];
 
-// Typings only allow `true`; returning undefined for unhandled messages is valid at runtime.
-const onMessage = ((raw: unknown, _sender: unknown, sendResponse: (r?: unknown) => void) => {
-  const msg = raw as Message;
-  switch (msg?.type) {
-    case 'discover':
-      discoverCalendars(msg.creds).then(
-        (calendars) => sendResponse({ calendars }),
-        (e) => sendResponse({ error: errMsg(e) }),
-      );
-      return true;
-    case 'fetch-busy':
-      getSettings()
-        .then((s) => fetchBusy(s, msg))
-        .then(sendResponse);
-      return true;
-    case 'open-options':
-      void ext.runtime.openOptionsPage();
-      return undefined;
-    default:
-      return undefined;
-  }
-}) as unknown as Listener;
+// Typings only allow a `true` return; returning false for unhandled messages is valid at runtime.
+const onMessage = ((raw: unknown, sender: { tab?: unknown }, sendResponse: (r?: unknown) => void) =>
+  routeMessage(raw as Message, sender, sendResponse, routerDeps)) as unknown as Listener;
 ext.runtime.onMessage.addListener(onMessage);
 
 async function syncCurrent(): Promise<void> {
@@ -41,11 +26,11 @@ async function syncCurrent(): Promise<void> {
     await syncContentScript(krabbeUrl);
   }
 }
-ext.runtime.onStartup.addListener(() => void syncCurrent());
-ext.runtime.onInstalled.addListener(() => void syncCurrent());
+ext.runtime.onStartup.addListener(() => syncCurrent().catch(console.error));
+ext.runtime.onInstalled.addListener(() => syncCurrent().catch(console.error));
 
 ext.storage.onChanged.addListener((changes, area) => {
   const change = changes.krabbeUrl;
   if (area !== 'local' || !change || typeof change.newValue !== 'string') return;
-  void syncContentScript(change.newValue, typeof change.oldValue === 'string' ? change.oldValue : undefined);
+  syncContentScript(change.newValue, typeof change.oldValue === 'string' ? change.oldValue : undefined).catch(console.error);
 });
