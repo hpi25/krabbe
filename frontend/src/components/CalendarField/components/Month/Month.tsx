@@ -1,5 +1,4 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
-import { rotateArray } from '@giraugh/tools'
 import { Temporal } from '@js-temporal/polyfill'
 import { AlertTriangle, ChevronLeft, ChevronRight } from 'lucide-react'
 
@@ -7,7 +6,7 @@ import Button from '/src/components/Button/Button'
 import { useTranslation } from '/src/i18n/client'
 import { useStore } from '/src/stores'
 import useSettingsStore from '/src/stores/settingsStore'
-import { getWeekdayNames, makeClass } from '/src/utils'
+import { getWeekdayNames, makeClass, rotateArray } from '/src/utils'
 
 import styles from './Month.module.scss'
 
@@ -35,7 +34,7 @@ const Month = ({ value, onChange }: MonthProps) => {
   }, [])
 
   const startPos = useRef({ x: 0, y: 0 })
-  const mode = useRef<'add' | 'remove'>()
+  const mode = useRef<'add' | 'remove'>(undefined)
 
   // Is 1 or more of the selected dates in the past?
   const hasPastDates = useMemo(() => value

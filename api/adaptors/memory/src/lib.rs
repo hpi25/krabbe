@@ -1,6 +1,5 @@
 use std::{collections::HashMap, error::Error, fmt::Display};
 
-use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use common::{Adaptor, Event, Person, Stats};
 use tokio::sync::Mutex;
@@ -15,7 +14,6 @@ pub struct MemoryAdaptor {
     state: Mutex<State>,
 }
 
-#[async_trait]
 impl Adaptor for MemoryAdaptor {
     type Error = MemoryAdaptorError;
 
@@ -140,7 +138,9 @@ impl Adaptor for MemoryAdaptor {
 impl MemoryAdaptor {
     pub async fn new() -> Self {
         println!("🧠 Using in-memory storage");
-        println!("🚨 WARNING: All data will be lost when the process ends. Make sure you choose a database adaptor before deploying.");
+        println!(
+            "🚨 WARNING: All data will be lost when the process ends. Make sure you choose a database adaptor before deploying."
+        );
 
         let state = Mutex::new(State {
             stats: Stats {

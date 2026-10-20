@@ -5,7 +5,7 @@ use chrono::{Duration, Utc};
 use common::Adaptor;
 use tracing::info;
 
-use crate::{errors::ApiError, State};
+use crate::{State, errors::ApiError};
 
 #[utoipa::path(
     get,

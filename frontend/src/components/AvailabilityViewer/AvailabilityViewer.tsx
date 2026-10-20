@@ -243,7 +243,7 @@ const AvailabilityViewer = ({ times, people, table, eventId, timeFormat, timezon
               }}
               onMouseOver={() => setTempFocus(person.name)}
               onMouseOut={() => setTempFocus(undefined)}
-              title={relativeTimeFormat(Temporal.Instant.fromEpochSeconds(person.created_at), i18n.language)}
+              title={relativeTimeFormat(Temporal.Instant.fromEpochMilliseconds(person.created_at * 1000), i18n.language)}
             >{person.name}</button>
           )}
         </div>

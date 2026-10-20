@@ -1,15 +1,18 @@
 use axum::{
+    Json,
     extract::{self, Path},
-    headers::{authorization::Bearer, Authorization},
-    Json, TypedHeader,
 };
-use base64::{engine::general_purpose, Engine};
+use axum_extra::{
+    TypedHeader,
+    headers::{Authorization, authorization::Bearer},
+};
+use base64::{Engine, engine::general_purpose};
 use common::{Adaptor, Person};
 
 use crate::{
+    State,
     errors::ApiError,
     payloads::{ApiResult, PersonInput, PersonResponse},
-    State,
 };
 
 #[utoipa::path(

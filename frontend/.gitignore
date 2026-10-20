@@ -8,3 +8,9 @@ tsconfig.tsbuildinfo
 
 .env
 .vercel
+
+# yarn
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases

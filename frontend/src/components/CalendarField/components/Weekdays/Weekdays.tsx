@@ -1,11 +1,10 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
-import { range, rotateArray } from '@giraugh/tools'
 import { Temporal } from '@js-temporal/polyfill'
 
 import { useTranslation } from '/src/i18n/client'
 import { useStore } from '/src/stores'
 import useSettingsStore from '/src/stores/settingsStore'
-import { makeClass } from '/src/utils'
+import { makeClass, range, rotateArray } from '/src/utils'
 
 // Use styles from Month picker
 import styles from '../Month/Month.module.scss'
@@ -32,7 +31,7 @@ const Weekdays = ({ value, onChange }: WeekdaysProps) => {
   }, [])
 
   const startPos = useRef(0)
-  const mode = useRef<'add' | 'remove'>()
+  const mode = useRef<'add' | 'remove'>(undefined)
 
   const handleFinishSelection = useCallback(() => {
     if (mode.current === 'add') {

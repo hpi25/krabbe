@@ -1,10 +1,10 @@
-use axum::{extract, Json};
+use axum::{Json, extract};
 use common::Adaptor;
 
 use crate::{
+    State,
     errors::ApiError,
     payloads::{ApiResult, StatsResponse},
-    State,
 };
 
 #[utoipa::path(

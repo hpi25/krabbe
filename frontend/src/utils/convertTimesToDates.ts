@@ -114,7 +114,8 @@ const parseWeekdayDate = (str: string, timezone: string): Temporal.ZonedDateTime
   // If resulting day (in target timezone) is in the next week, move it back to this week
   const dayInTz = resultDate.withTimeZone(timezone)
   const todayInTz = today.withTimeZone(timezone)
-  if (dayInTz.weekOfYear > todayInTz.weekOfYear) {
+  // weekOfYear is always defined for the ISO calendar
+  if (dayInTz.weekOfYear! > todayInTz.weekOfYear!) {
     resultDate = resultDate.subtract({ days: 7 })
   }
 

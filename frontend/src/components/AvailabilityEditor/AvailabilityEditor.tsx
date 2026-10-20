@@ -37,7 +37,7 @@ const AvailabilityEditor = ({ eventId, times, timezone, value = [], onChange, ta
   }, [])
 
   const startPos = useRef({ x: 0, y: 0 })
-  const mode = useRef<'add' | 'remove'>()
+  const mode = useRef<'add' | 'remove'>(undefined)
 
   // Create the colour palette
   const palette = usePalette(MAXSCORE + 1)

@@ -90,7 +90,7 @@ export const StatsResponse = z.object({
 })
 export type StatsResponse = z.infer<typeof StatsResponse>
 
-const get = async <S extends z.Schema>(url: string, schema: S, auth?: string, nextOptions?: NextFetchRequestConfig): Promise<ReturnType<S['parse']>> => {
+const get = async <S extends z.ZodType>(url: string, schema: S, auth?: string, nextOptions?: NextFetchRequestConfig): Promise<z.infer<S>> => {
   const res = await fetch(new URL(url, API_BASE), {
     headers: {
       ...auth && { Authorization: `Bearer ${auth}` },
@@ -102,7 +102,7 @@ const get = async <S extends z.Schema>(url: string, schema: S, auth?: string, ne
   return schema.parse(await res.json())
 }
 
-const post = async <S extends z.Schema>(url: string, schema: S, input: unknown, auth?: string, method = 'POST'): Promise<ReturnType<S['parse']>> => {
+const post = async <S extends z.ZodType>(url: string, schema: S, input: unknown, auth?: string, method = 'POST'): Promise<z.infer<S>> => {
   const res = await fetch(new URL(url, API_BASE), {
     method,
     headers: {

@@ -1,14 +1,11 @@
 [package]
 name = "sql-adaptor"
 version = "0.1.0"
-edition = "2021"
+edition.workspace = true
 
 [dependencies]
-async-trait = "0.1.68"
-common = { path = "../../common" }
-sea-orm = { version = "0.11.3", features = [ "macros", "sqlx-mysql", "sqlx-postgres", "sqlx-sqlite", "runtime-tokio-native-tls" ] }
-serde = { version = "1.0.162", features = [ "derive" ] }
-async-std = { version = "1", features = ["attributes", "tokio1"] }
-sea-orm-migration = "0.11.0"
-serde_json = "1.0.96"
-chrono = "0.4.24"
+common.workspace = true
+sea-orm = { version = "2.0.4", features = ["macros", "sqlx-mysql", "sqlx-postgres", "sqlx-sqlite", "runtime-tokio-native-tls"] }
+sea-orm-migration = { version = "2.0.4", default-features = false, features = ["runtime-tokio-native-tls"] }
+serde_json.workspace = true
+chrono.workspace = true

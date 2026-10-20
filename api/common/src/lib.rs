@@ -1,32 +1,42 @@
 use std::error::Error;
 
-use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 
 /// Data storage adaptor, all methods on an adaptor can return an error if
 /// something goes wrong, or potentially None if the data requested was not found.
-#[async_trait]
+///
+/// Implementations can use `async fn` for each method, as long as the returned futures are `Send`.
 pub trait Adaptor: Send + Sync {
     type Error: Error;
 
-    async fn get_stats(&self) -> Result<Stats, Self::Error>;
-    async fn increment_stat_event_count(&self) -> Result<i64, Self::Error>;
-    async fn increment_stat_person_count(&self) -> Result<i64, Self::Error>;
+    fn get_stats(&self) -> impl Future<Output = Result<Stats, Self::Error>> + Send;
+    fn increment_stat_event_count(&self) -> impl Future<Output = Result<i64, Self::Error>> + Send;
+    fn increment_stat_person_count(&self) -> impl Future<Output = Result<i64, Self::Error>> + Send;
 
-    async fn get_people(&self, event_id: String) -> Result<Option<Vec<Person>>, Self::Error>;
-    async fn upsert_person(
+    fn get_people(
+        &self,
+        event_id: String,
+    ) -> impl Future<Output = Result<Option<Vec<Person>>, Self::Error>> + Send;
+    fn upsert_person(
         &self,
         event_id: String,
         person: Person,
-    ) -> Result<Option<Person>, Self::Error>;
+    ) -> impl Future<Output = Result<Option<Person>, Self::Error>> + Send;
 
     /// Get an event and update visited date to current time
-    async fn get_event(&self, id: String) -> Result<Option<Event>, Self::Error>;
-    async fn create_event(&self, event: Event) -> Result<Event, Self::Error>;
+    fn get_event(
+        &self,
+        id: String,
+    ) -> impl Future<Output = Result<Option<Event>, Self::Error>> + Send;
+    fn create_event(&self, event: Event)
+    -> impl Future<Output = Result<Event, Self::Error>> + Send;
 
     /// Delete events older than a cutoff date, as well as any associated people
     /// Returns the amount of events and people deleted
-    async fn delete_events(&self, cutoff: DateTime<Utc>) -> Result<Stats, Self::Error>;
+    fn delete_events(
+        &self,
+        cutoff: DateTime<Utc>,
+    ) -> impl Future<Output = Result<Stats, Self::Error>> + Send;
 }
 
 #[derive(Clone)]

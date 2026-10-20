@@ -3,35 +3,41 @@ name = "crabfit-api"
 description = "API for Crab Fit"
 license = "GPL-3.0-only"
 version = "3.0.0"
-edition = "2021"
+edition.workspace = true
 
 [features]
 sql-adaptor = []
-datastore-adaptor = []
 
 [workspace]
 members = ["common", "adaptors/*"]
 
-[dependencies]
-axum = { version = "0.6.18", features = ["headers"] }
-serde = { version = "1.0.162", features = ["derive"] }
-tokio = { version = "1.28.0", features = ["macros", "rt-multi-thread"] }
+[workspace.package]
+edition = "2024"
+
+[workspace.dependencies]
+chrono = "0.4.45"
 common = { path = "common" }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+tokio = "1.54.0"
+
+[dependencies]
+axum = "0.8.9"
+axum-extra = { version = "0.12.6", features = ["typed-header"] }
+serde.workspace = true
+tokio = { workspace = true, features = ["macros", "rt-multi-thread", "signal"] }
+common.workspace = true
 sql-adaptor = { path = "adaptors/sql" }
-datastore-adaptor = { path = "adaptors/datastore" }
 memory-adaptor = { path = "adaptors/memory" }
 dotenvy = "0.15.7"
-serde_json = "1.0.96"
-rand = "0.8.5"
-punycode = "0.4.1"
-regex = "1.8.1"
-tracing = "0.1.37"
-tracing-subscriber = "0.3.17"
-chrono = "0.4.24"
-bcrypt = "0.14.0"
-tower-http = { version = "0.4.0", features = ["cors", "trace"] }
-tower_governor = "0.0.4"
-tower = "0.4.13"
-utoipa = { version = "3.3.0", features = ["axum_extras", "preserve_order"] }
-utoipa-swagger-ui = { version = "3.1.3", features = ["axum", "debug-embed"] }
-base64 = "0.21.0"
+serde_json.workspace = true
+rand = "0.10.3"
+tracing = "0.1.44"
+tracing-subscriber = "0.3.23"
+chrono.workspace = true
+bcrypt = "0.19.3"
+tower-http = { version = "0.7.1", features = ["cors", "trace"] }
+tower_governor = "0.8.0"
+utoipa = { version = "6.0.0", features = ["axum_extras", "preserve_order"] }
+utoipa-swagger-ui = { version = "10.0.1", features = ["axum", "vendored"] }
+base64 = "0.23.1"

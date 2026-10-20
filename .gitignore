@@ -1,2 +1,4 @@
 /graphics
 .DS_Store
+/.direnv
+.envrc

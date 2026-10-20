@@ -2,8 +2,7 @@
 name = "common"
 description = "Shared structs and traits for the data storage and transfer of Crab Fit"
 version = "0.1.0"
-edition = "2021"
+edition.workspace = true
 
 [dependencies]
-async-trait = "0.1.68"
-chrono = "0.4.24"
+chrono.workspace = true

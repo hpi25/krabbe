@@ -1,16 +1,14 @@
-use std::{env, error::Error};
+use std::{env, error::Error, fmt::Display};
 
-use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use common::{Adaptor, Event, Person, Stats};
 use entity::{event, person, stats};
 use migration::{Migrator, MigratorTrait};
 use sea_orm::{
-    strum::Display,
     ActiveModelTrait,
     ActiveValue::{NotSet, Set},
-    ColumnTrait, Database, DatabaseConnection, DbErr, EntityTrait, ModelTrait, QueryFilter,
-    TransactionError, TransactionTrait, TryIntoModel,
+    ColumnTrait, Database, DatabaseConnection, DbBackend, DbErr, EntityTrait, ModelTrait,
+    QueryFilter, TransactionError, TransactionTrait, TryIntoModel,
 };
 use serde_json::json;
 
@@ -21,7 +19,6 @@ pub struct SqlAdaptor {
     db: DatabaseConnection,
 }
 
-#[async_trait]
 impl Adaptor for SqlAdaptor {
     type Error = SqlAdaptorError;
 
@@ -191,11 +188,11 @@ impl SqlAdaptor {
             .expect("Failed to connect to SQL database");
         println!(
             "{} Connected to database at {}",
-            match db {
-                DatabaseConnection::SqlxMySqlPoolConnection(_) => "🐬",
-                DatabaseConnection::SqlxPostgresPoolConnection(_) => "🐘",
-                DatabaseConnection::SqlxSqlitePoolConnection(_) => "🪶",
-                DatabaseConnection::Disconnected => panic!("Failed to connect to SQL database"),
+            match db.get_database_backend() {
+                DbBackend::MySql => "🐬",
+                DbBackend::Postgres => "🐘",
+                DbBackend::Sqlite => "🪶",
+                _ => "🗄️",
             },
             connection_string
         );
@@ -233,10 +230,19 @@ impl From<person::Model> for Person {
     }
 }
 
-#[derive(Display, Debug)]
+#[derive(Debug)]
 pub enum SqlAdaptorError {
     DbErr(DbErr),
     TransactionError(TransactionError<DbErr>),
+}
+
+impl Display for SqlAdaptorError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::DbErr(e) => write!(f, "Database error: {e}"),
+            Self::TransactionError(e) => write!(f, "Transaction error: {e}"),
+        }
+    }
 }
 
 impl Error for SqlAdaptorError {}

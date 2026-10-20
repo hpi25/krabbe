@@ -1,4 +1,4 @@
-import { Metadata } from 'next'
+import { Metadata, Viewport } from 'next'
 import { Karla } from 'next/font/google'
 
 import Egg from '/src/components/Egg/Egg'
@@ -11,6 +11,10 @@ import './global.css'
 
 const karla = Karla({ subsets: ['latin'] })
 
+export const viewport: Viewport = {
+  themeColor: '#F79E00',
+}
+
 export const metadata: Metadata = {
   metadataBase: new URL('https://starbestfit.com'),
   title: {
@@ -19,7 +23,6 @@ export const metadata: Metadata = {
   },
   keywords: ['star', 'fit', 'best', 'starfit', 'starbestfit', 'schedule', 'availability', 'availabilities', 'preferences', 'when2meet', 'doodle', 'meet', 'plan', 'time', 'timezone'],
   description: 'Enter your preferences to find a time that works for everyone!',
-  themeColor: '#F79E00',
   manifest: 'manifest.json',
   openGraph: {
     title: 'Star Fit',

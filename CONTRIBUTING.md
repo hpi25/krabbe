@@ -23,9 +23,9 @@ Star Fit is written using Rust (for the API) and Next.js (for the frontend). Bef
 | Software | Installation instructions |
 | --- | --- |
 | git | You'll need git to clone the repository. You likely already have it if you're on MacOS, otherwise see the [git site](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git). |
-| node | I recommend using `nvm` or `fnm` to manage multiple node versions, but you can also install directly from the [node.js website](https://nodejs.org/en/download). |
-| yarn | Node comes with `npm`, which you can use to run `npm install --global yarn` to install yarn. |
-| rust | You can install rust by following the directions on the [rust website](https://www.rust-lang.org/tools/install). |
+| node | Version 26 or newer is required. I recommend using `nvm` or `fnm` to manage multiple node versions (the `frontend` folder has an `.nvmrc`), but you can also install directly from the [node.js website](https://nodejs.org/en/download). |
+| yarn | Yarn 4 is used, pinned by the `packageManager` field in `frontend/package.json`. Run `npm install --global corepack` then `corepack enable` to have the correct version picked up automatically. |
+| rust | You can install rust by following the directions on the [rust website](https://www.rust-lang.org/tools/install). The API builds with nightly Rust, which `rustup` will install automatically from `api/rust-toolchain.toml`. |
 
 ### Setup
 

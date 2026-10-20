@@ -138,10 +138,10 @@
  */
 
 import { Temporal } from '@js-temporal/polyfill'
-import seedrandom from 'seedrandom'
 
 import { PersonResponse, TimeScore } from '/src/config/api'
 import { Availability, calculateAvailability, NameScore } from '/src/utils/calculateAvailability'
+import { seededRandom } from '/src/utils/seededRandom'
 
 import { convertTimesToDates } from './convertTimesToDates'
 
@@ -316,8 +316,7 @@ const calculateSimpleCandidateMetrics = (
   const scores = []
   const fiveStars = []
   const randomTieValues = []
-  // const myrng = new Math.seedrandom(eventId)
-  const myrng = seedrandom(eventId)
+  const myrng = seededRandom(eventId)
   for (let i = 0; i < times.length; i++) {
     scores.push(times[i].people.reduce((sum, p) => sum += p.score, 0))
     fiveStars.push( // count time as five stars if the average score is >4.5

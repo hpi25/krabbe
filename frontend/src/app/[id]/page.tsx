@@ -14,11 +14,12 @@ import EventAvailabilities from './EventAvailabilities'
 import styles from './page.module.scss'
 
 interface PageProps {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }
 
 export const generateMetadata = async ({ params }: PageProps): Promise<Metadata> => {
-  const event = await getEvent(params.id).catch(() => undefined)
+  const { id } = await params
+  const event = await getEvent(id).catch(() => undefined)
   const { t } = await useTranslation('event')
 
   return {
@@ -27,7 +28,8 @@ export const generateMetadata = async ({ params }: PageProps): Promise<Metadata>
 }
 
 const Page = async ({ params }: PageProps) => {
-  const event = await getEvent(params.id).catch(() => undefined)
+  const { id } = await params
+  const event = await getEvent(id).catch(() => undefined)
   if (!event) notFound()
 
   const { t, i18n } = await useTranslation(['common', 'event'])
@@ -45,8 +47,8 @@ const Page = async ({ params }: PageProps) => {
         <h1 className={styles.name}>{event.name}</h1>
         <span
           className={styles.date}
-          title={Temporal.Instant.fromEpochSeconds(event.created_at).toLocaleString(i18n.language, { dateStyle: 'long' })}
-        >{t('common:created', { date: relativeTimeFormat(Temporal.Instant.fromEpochSeconds(event.created_at), i18n.language) })}</span>
+          title={Temporal.Instant.fromEpochMilliseconds(event.created_at * 1000).toLocaleString(i18n.language, { dateStyle: 'long' })}
+        >{t('common:created', { date: relativeTimeFormat(Temporal.Instant.fromEpochMilliseconds(event.created_at * 1000), i18n.language) })}</span>
 
         <Copyable className={styles.info}>
           {`https://starbestfit.com/${event.id}`}

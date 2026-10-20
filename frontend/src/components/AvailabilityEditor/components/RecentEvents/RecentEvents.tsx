@@ -67,7 +67,7 @@ const RecentEvents = ({ eventId, times, preferences, onImport }: RecentEventsPro
 
       {recents.map(recent => <div
         key={recent.id}
-        title={Temporal.Instant.fromEpochSeconds(recent.created_at).toLocaleString(i18n.language, { dateStyle: 'long' })}
+        title={Temporal.Instant.fromEpochMilliseconds(recent.created_at * 1000).toLocaleString(i18n.language, { dateStyle: 'long' })}
         className={styles.item}
       >
         <input type="radio" name="recents" value={recent.id} id={recent.id} onChange={() => setSelected(recent.id)} checked={selected === recent.id} />
@@ -76,7 +76,7 @@ const RecentEvents = ({ eventId, times, preferences, onImport }: RecentEventsPro
           className={styles.name}
         >
           <span>{recent.name} ({recent.user.name})</span>
-          <span style={{ opacity: .7, fontSize: '.7em' }}>{relativeTimeFormat(Temporal.Instant.fromEpochSeconds(recent.created_at), i18n.language)}</span>
+          <span style={{ opacity: .7, fontSize: '.7em' }}>{relativeTimeFormat(Temporal.Instant.fromEpochMilliseconds(recent.created_at * 1000), i18n.language)}</span>
         </label>
       </div>)}
 

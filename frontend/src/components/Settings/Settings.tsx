@@ -2,9 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { isKeyOfObject } from '@giraugh/tools'
-import { maps } from 'hue-map'
-import { MapKey } from 'hue-map/dist/maps'
 import { Settings as SettingsIcon } from 'lucide-react'
 
 import SelectField from '/src/components/SelectField/SelectField'
@@ -13,7 +10,8 @@ import { useTranslation } from '/src/i18n/client'
 import { languageDetails } from '/src/i18n/options'
 import { useStore } from '/src/stores'
 import useSettingsStore from '/src/stores/settingsStore'
-import { makeClass, unhyphenate } from '/src/utils'
+import { isKeyOfObject, makeClass, unhyphenate } from '/src/utils'
+import { colorMaps, MapKey } from '/src/utils/colormap'
 
 import styles from './Settings.module.scss'
 
@@ -108,7 +106,7 @@ const Settings = () => {
             name="colormap"
             options={{
               'crabfit': t('options.colormap.classic'),
-              ...Object.fromEntries(Object.keys(maps).sort().map(palette => [
+              ...Object.fromEntries(Object.keys(colorMaps).sort().map(palette => [
                 palette,
                 unhyphenate(palette)
               ])),

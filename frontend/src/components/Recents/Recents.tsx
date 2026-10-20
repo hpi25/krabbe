@@ -24,8 +24,8 @@ const Recents = () => {
           <span className={styles.name}>{event.name}</span>
           <span
             className={styles.date}
-            title={Temporal.Instant.fromEpochSeconds(event.created_at).toLocaleString(i18n.language, { dateStyle: 'long' })}
-          >{t('common:created', { date: relativeTimeFormat(Temporal.Instant.fromEpochSeconds(event.created_at), i18n.language) })}</span>
+            title={Temporal.Instant.fromEpochMilliseconds(event.created_at * 1000).toLocaleString(i18n.language, { dateStyle: 'long' })}
+          >{t('common:created', { date: relativeTimeFormat(Temporal.Instant.fromEpochMilliseconds(event.created_at * 1000), i18n.language) })}</span>
         </Link>
       ))}
     </Content>
