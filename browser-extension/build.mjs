@@ -19,16 +19,20 @@ const entries = {
 };
 const entryPoints = Object.fromEntries(Object.entries(entries).filter(([, p]) => existsSync(p)));
 
-await build({
-  entryPoints,
+// content.js is registered via scripting.registerContentScripts, which runs it as a
+// classic script, so it must not contain top-level import/export.
+const { content, ...moduleEntries } = entryPoints;
+const common = {
   outdir: out,
   bundle: true,
-  format: 'esm',
   platform: 'browser',
   target: 'firefox128',
   loader: { '.css': 'text' },
   logLevel: 'info',
-});
+};
+
+await build({ ...common, entryPoints: moduleEntries, format: 'esm' });
+if (content) await build({ ...common, entryPoints: { content }, format: 'iife' });
 
 for (const html of ['src/popup/popup.html', 'src/options/options.html']) {
   if (existsSync(html)) cpSync(html, `${out}/${html.split('/').pop()}`);
