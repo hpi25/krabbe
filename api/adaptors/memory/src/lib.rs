@@ -1,13 +1,15 @@
 use std::{collections::HashMap, error::Error, fmt::Display};
 
 use chrono::{DateTime, Utc};
-use common::{Adaptor, Event, Person, Stats};
+use common::{Adaptor, Event, Person, Session, Stats, User};
 use tokio::sync::Mutex;
 
 struct State {
     stats: Stats,
     events: HashMap<String, Event>,
     people: HashMap<(String, String), Person>,
+    users: HashMap<String, User>,
+    sessions: HashMap<String, Session>,
 }
 
 pub struct MemoryAdaptor {
@@ -124,7 +126,7 @@ impl Adaptor for MemoryAdaptor {
             .people
             .clone()
             .into_iter()
-            .filter(|((event_id, _), _)| deleted_event_ids.contains(event_id))
+            .filter(|((event_id, _), _)| !deleted_event_ids.contains(event_id))
             .collect();
         person_count -= state.people.len() as i64;
 
@@ -132,6 +134,76 @@ impl Adaptor for MemoryAdaptor {
             event_count: deleted_event_ids.len() as i64,
             person_count,
         })
+    }
+
+    async fn update_event(&self, event: Event) -> Result<Option<Event>, Self::Error> {
+        let mut state = self.state.lock().await;
+
+        if !state.events.contains_key(&event.id) {
+            return Ok(None);
+        }
+
+        state.events.insert(event.id.clone(), event.clone());
+
+        Ok(Some(event))
+    }
+
+    async fn delete_event(&self, id: String) -> Result<bool, Self::Error> {
+        let mut state = self.state.lock().await;
+
+        if state.events.remove(&id).is_none() {
+            return Ok(false);
+        }
+        state.people.retain(|(event_id, _), _| *event_id != id);
+
+        Ok(true)
+    }
+
+    async fn get_user(&self, username: String) -> Result<Option<User>, Self::Error> {
+        let state = self.state.lock().await;
+
+        Ok(state.users.get(&username).cloned())
+    }
+
+    async fn create_user(&self, user: User) -> Result<User, Self::Error> {
+        let mut state = self.state.lock().await;
+
+        state.users.insert(user.username.clone(), user.clone());
+
+        Ok(user)
+    }
+
+    async fn get_session(&self, token_hash: String) -> Result<Option<Session>, Self::Error> {
+        let state = self.state.lock().await;
+
+        Ok(state.sessions.get(&token_hash).cloned())
+    }
+
+    async fn create_session(&self, session: Session) -> Result<Session, Self::Error> {
+        let mut state = self.state.lock().await;
+
+        state
+            .sessions
+            .insert(session.token_hash.clone(), session.clone());
+
+        Ok(session)
+    }
+
+    async fn delete_session(&self, token_hash: String) -> Result<(), Self::Error> {
+        let mut state = self.state.lock().await;
+
+        state.sessions.remove(&token_hash);
+
+        Ok(())
+    }
+
+    async fn delete_sessions(&self, cutoff: DateTime<Utc>) -> Result<i64, Self::Error> {
+        let mut state = self.state.lock().await;
+
+        let count = state.sessions.len();
+        state.sessions.retain(|_, s| s.created_at >= cutoff);
+
+        Ok((count - state.sessions.len()) as i64)
     }
 }
 
@@ -149,6 +221,8 @@ impl MemoryAdaptor {
             },
             events: HashMap::new(),
             people: HashMap::new(),
+            users: HashMap::new(),
+            sessions: HashMap::new(),
         });
 
         Self { state }

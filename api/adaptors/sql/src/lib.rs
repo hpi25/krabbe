@@ -1,8 +1,8 @@
 use std::{env, error::Error, fmt::Display};
 
 use chrono::{DateTime, Utc};
-use common::{Adaptor, Event, Person, Stats};
-use entity::{event, person, stats};
+use common::{Adaptor, Event, Person, Session, Stats, User};
+use entity::{account, event, person, session, stats};
 use migration::{Migrator, MigratorTrait};
 use sea_orm::{
     ActiveModelTrait,
@@ -116,6 +116,7 @@ impl Adaptor for SqlAdaptor {
             visited_at: Set(event.visited_at.naive_utc()),
             times: Set(serde_json::to_value(event.times).unwrap_or(json!([]))),
             timezone: Set(event.timezone),
+            owner: Set(event.owner),
         }
         .insert(&self.db)
         .await?
@@ -160,6 +161,101 @@ impl Adaptor for SqlAdaptor {
             event_count,
             person_count,
         })
+    }
+
+    async fn update_event(&self, event: Event) -> Result<Option<Event>, Self::Error> {
+        if event::Entity::find_by_id(event.id.clone())
+            .one(&self.db)
+            .await?
+            .is_none()
+        {
+            return Ok(None);
+        }
+
+        Ok(Some(
+            event::ActiveModel {
+                id: Set(event.id),
+                name: Set(event.name),
+                created_at: Set(event.created_at.naive_utc()),
+                visited_at: Set(event.visited_at.naive_utc()),
+                times: Set(serde_json::to_value(event.times).unwrap_or(json!([]))),
+                timezone: Set(event.timezone),
+                owner: Set(event.owner),
+            }
+            .update(&self.db)
+            .await?
+            .into(),
+        ))
+    }
+
+    async fn delete_event(&self, id: String) -> Result<bool, Self::Error> {
+        Ok(self
+            .db
+            .transaction::<_, bool, DbErr>(|t| {
+                Box::pin(async move {
+                    person::Entity::delete_many()
+                        .filter(person::Column::EventId.eq(&id))
+                        .exec(t)
+                        .await?;
+
+                    let result = event::Entity::delete_by_id(id).exec(t).await?;
+
+                    Ok(result.rows_affected > 0)
+                })
+            })
+            .await?)
+    }
+
+    async fn get_user(&self, username: String) -> Result<Option<User>, Self::Error> {
+        Ok(account::Entity::find_by_id(username)
+            .one(&self.db)
+            .await?
+            .map(|model| model.into()))
+    }
+
+    async fn create_user(&self, user: User) -> Result<User, Self::Error> {
+        Ok(account::ActiveModel {
+            username: Set(user.username),
+            display_name: Set(user.display_name),
+            password_hash: Set(user.password_hash),
+            created_at: Set(user.created_at.naive_utc()),
+        }
+        .insert(&self.db)
+        .await?
+        .into())
+    }
+
+    async fn get_session(&self, token_hash: String) -> Result<Option<Session>, Self::Error> {
+        Ok(session::Entity::find_by_id(token_hash)
+            .one(&self.db)
+            .await?
+            .map(|model| model.into()))
+    }
+
+    async fn create_session(&self, session: Session) -> Result<Session, Self::Error> {
+        Ok(session::ActiveModel {
+            token_hash: Set(session.token_hash),
+            username: Set(session.username),
+            created_at: Set(session.created_at.naive_utc()),
+        }
+        .insert(&self.db)
+        .await?
+        .into())
+    }
+
+    async fn delete_session(&self, token_hash: String) -> Result<(), Self::Error> {
+        session::Entity::delete_by_id(token_hash)
+            .exec(&self.db)
+            .await?;
+        Ok(())
+    }
+
+    async fn delete_sessions(&self, cutoff: DateTime<Utc>) -> Result<i64, Self::Error> {
+        Ok(session::Entity::delete_many()
+            .filter(session::Column::CreatedAt.lt(cutoff.naive_utc()))
+            .exec(&self.db)
+            .await?
+            .rows_affected as i64)
     }
 }
 
@@ -215,6 +311,7 @@ impl From<event::Model> for Event {
             visited_at: DateTime::<Utc>::from_naive_utc_and_offset(value.visited_at, Utc),
             times: serde_json::from_value(value.times).unwrap_or(vec![]),
             timezone: value.timezone,
+            owner: value.owner,
         }
     }
 }
@@ -255,5 +352,26 @@ impl From<DbErr> for SqlAdaptorError {
 impl From<TransactionError<DbErr>> for SqlAdaptorError {
     fn from(value: TransactionError<DbErr>) -> Self {
         Self::TransactionError(value)
+    }
+}
+
+impl From<account::Model> for User {
+    fn from(value: account::Model) -> Self {
+        Self {
+            username: value.username,
+            display_name: value.display_name,
+            password_hash: value.password_hash,
+            created_at: DateTime::<Utc>::from_naive_utc_and_offset(value.created_at, Utc),
+        }
+    }
+}
+
+impl From<session::Model> for Session {
+    fn from(value: session::Model) -> Self {
+        Self {
+            token_hash: value.token_hash,
+            username: value.username,
+            created_at: DateTime::<Utc>::from_naive_utc_and_offset(value.created_at, Utc),
+        }
     }
 }

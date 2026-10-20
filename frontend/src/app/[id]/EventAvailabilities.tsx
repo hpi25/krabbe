@@ -7,7 +7,7 @@ import AvailabilityEditor from '/src/components/AvailabilityEditor/AvailabilityE
 import AvailabilityViewer from '/src/components/AvailabilityViewer/AvailabilityViewer'
 import Button from '/src/components/Button/Button'
 import Content from '/src/components/Content/Content'
-import Login from '/src/components/Login/Login'
+import Login, { LoginAuth } from '/src/components/Login/Login'
 import Section from '/src/components/Section/Section'
 import SelectField from '/src/components/SelectField/SelectField'
 import { EventResponse, getPeople, PersonResponse, updatePerson } from '/src/config/api'
@@ -35,7 +35,7 @@ const EventAvailabilities = ({ event }: EventAvailabilitiesProps) => {
   const expandedTimes = useMemo(() => expandTimes(event?.times ?? []), [event?.times])
 
   const [user, setUser] = useState<PersonResponse>()
-  const [password, setPassword] = useState<string>()
+  const [auth, setAuth] = useState<LoginAuth>()
 
   const [tab, setTab] = useState<'group' | 'you'>('group')
   const [timezone, setTimezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone)
@@ -86,10 +86,10 @@ const EventAvailabilities = ({ event }: EventAvailabilitiesProps) => {
   return <>
     <Section id="login">
       <Content>
-        <Login eventId={event?.id} user={user} onChange={(u, p) => {
+        <Login eventId={event?.id} user={user} onChange={(u, a, isAutomatic) => {
           setUser(u)
-          setPassword(p)
-          setTab(u ? 'you' : 'group')
+          setAuth(a)
+          setTab(u && !isAutomatic ? 'you' : 'group')
         }} />
 
         <SelectField
@@ -193,11 +193,11 @@ const EventAvailabilities = ({ event }: EventAvailabilitiesProps) => {
           name: event.name,
           created_at: event.created_at,
           user: availability.length > 0 ? {
-            name: user.name,
+            name: user.display_name,
             availability,
           } : undefined,
         })
-        updatePerson(event.id, user.name, { availability }, password)
+        updatePerson(event.id, user.name, { availability }, auth)
           .catch(e => {
             console.warn(e)
             setUser({ ...user, availability: oldAvailability })

@@ -22,11 +22,15 @@
     "errors": {
       "name_required": "Your name is needed to store your preferences.",
       "password_incorrect": "Password is incorrect. Check your name is spelled right.",
-      "unknown": "Failed to login. Please try again."
+      "unknown": "Failed to login. Please try again.",
+      "name_reserved": "Names starting with @ are reserved for accounts."
     },
     "created_in_timezone": "This event was created in the timezone <strong>{{timezone}}</strong>. <3>Click here</3> to use it.",
     "local_timezone": "Your local timezone is detected to be <strong>{{timezone}}</strong>. <3>Click here</3> to use it.",
-    "dst_warning": "Your timezone and the event timezone have different daylight saving rules. Times may shift by ~1 hour near DST transitions."
+    "dst_warning": "Your timezone and the event timezone have different daylight saving rules. Times may shift by ~1 hour near DST transitions.",
+    "guest_button": "Enter as guest",
+    "use_account": "Use your account @{{username}} instead.",
+    "account_hint": "Log in to use your account on every event."
   },
   "offline": {
     "title": "You are offline",
@@ -78,5 +82,14 @@
       }
     },
     "done": "Done"
+  },
+  "owner": {
+    "edit_button": "Edit event",
+    "cancel_button": "Cancel editing",
+    "delete_button": "Delete event",
+    "delete_confirm": "Click again to delete",
+    "errors": {
+      "delete": "Failed to delete the event. Please try again."
+    }
   }
 }

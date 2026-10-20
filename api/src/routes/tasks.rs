@@ -5,7 +5,7 @@ use chrono::{Duration, Utc};
 use common::Adaptor;
 use tracing::info;
 
-use crate::{State, errors::ApiError};
+use crate::{State, auth::SESSION_LIFETIME, errors::ApiError};
 
 #[utoipa::path(
     get,
@@ -18,7 +18,7 @@ use crate::{State, errors::ApiError};
     security((), ("cron-key" = [])),
     tag = "tasks",
 )]
-/// Delete events older than 3 months
+/// Delete events older than 3 months and expired sessions
 pub async fn cleanup<A: Adaptor>(
     extract::State(state): State<A>,
     headers: HeaderMap,
@@ -42,9 +42,14 @@ pub async fn cleanup<A: Adaptor>(
         .await
         .map_err(ApiError::AdaptorError)?;
 
+    let session_count = adaptor
+        .delete_sessions(Utc::now() - SESSION_LIFETIME)
+        .await
+        .map_err(ApiError::AdaptorError)?;
+
     info!(
-        "Cleanup successful: {} events and {} people removed",
-        result.event_count, result.person_count
+        "Cleanup successful: {} events, {} people and {} expired sessions removed",
+        result.event_count, result.person_count, session_count
     );
 
     Ok(())

@@ -1,0 +1,36 @@
+.button {
+  height: 50px;
+  min-width: 50px;
+  color: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  position: absolute;
+  top: 12px;
+  right: 66px;
+  z-index: 200;
+  border-radius: 25px;
+  text-decoration: none;
+  padding: 0;
+
+  &:focus-visible {
+    outline: var(--focus-ring);
+  }
+
+  @media print {
+    display: none;
+  }
+}
+
+.username {
+  font-size: 14px;
+  max-width: 10em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  @media (max-width: 500px) {
+    display: none;
+  }
+}

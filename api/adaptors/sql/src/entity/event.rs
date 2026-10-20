@@ -12,6 +12,7 @@ pub struct Model {
     pub visited_at: DateTime,
     pub times: Json,
     pub timezone: String,
+    pub owner: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

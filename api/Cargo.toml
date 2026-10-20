@@ -41,3 +41,5 @@ tower_governor = "0.8.0"
 utoipa = { version = "6.0.0", features = ["axum_extras", "preserve_order"] }
 utoipa-swagger-ui = { version = "10.0.1", features = ["axum", "vendored"] }
 base64 = "0.23.1"
+hex = "0.4.3"
+sha2 = "0.11.1"

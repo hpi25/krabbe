@@ -1,7 +1,7 @@
 use axum::{
     Json,
     extract::{self, Path},
-    http::StatusCode,
+    http::{HeaderMap, StatusCode},
 };
 use common::{Adaptor, Event};
 use rand::{RngExt, seq::IndexedRandom};
@@ -9,7 +9,8 @@ use rand::{RngExt, seq::IndexedRandom};
 use crate::{
     State,
     errors::ApiError,
-    payloads::{ApiResult, EventInput, EventResponse},
+    auth::{get_session_user, require_session_user},
+    payloads::{ApiResult, EventInput, EventResponse, EventUpdateInput},
     punycode,
 };
 
@@ -48,20 +49,25 @@ pub async fn get_event<A: Adaptor>(
     post,
     path = "/event",
     request_body(content = EventInput, description = "New event details"),
+    security((), ("session" = [])),
     responses(
         (status = 201, description = "Created", body = EventResponse),
+        (status = 401, description = "Invalid or expired session"),
         (status = 415, description = "Unsupported input format"),
         (status = 422, description = "Invalid input provided"),
         (status = 429, description = "Too many requests"),
     ),
     tag = "event",
 )]
-/// Create a new event
+/// Create a new event, owned by the logged in user if there is a session
 pub async fn create_event<A: Adaptor>(
     extract::State(state): State<A>,
+    headers: HeaderMap,
     Json(input): Json<EventInput>,
 ) -> Result<(StatusCode, Json<EventResponse>), ApiError<A>> {
     let adaptor = &state.lock().await.adaptor;
+
+    let owner = get_session_user(adaptor, &headers).await?.map(|u| u.username);
 
     // Get the current timestamp
     let now = chrono::offset::Utc::now();
@@ -93,6 +99,7 @@ pub async fn create_event<A: Adaptor>(
             visited_at: now,
             times: input.times,
             timezone: input.timezone,
+            owner,
         })
         .await
         .map_err(ApiError::AdaptorError)?;
@@ -104,6 +111,116 @@ pub async fn create_event<A: Adaptor>(
         .map_err(ApiError::AdaptorError)?;
 
     Ok((StatusCode::CREATED, Json(event.into())))
+}
+
+#[utoipa::path(
+    patch,
+    path = "/event/{event_id}",
+    params(
+        ("event_id", description = "The ID of the event"),
+    ),
+    security(("session" = [])),
+    request_body(content = EventUpdateInput, description = "Event details to change"),
+    responses(
+        (status = 200, description = "Ok", body = EventResponse),
+        (status = 401, description = "Missing, invalid or expired session"),
+        (status = 403, description = "Not the owner of the event"),
+        (status = 404, description = "Not found"),
+        (status = 415, description = "Unsupported input format"),
+        (status = 422, description = "Invalid input provided"),
+        (status = 429, description = "Too many requests"),
+    ),
+    tag = "event",
+)]
+/// Change the details of an event owned by the logged in user
+pub async fn update_event<A: Adaptor>(
+    extract::State(state): State<A>,
+    Path(event_id): Path<String>,
+    headers: HeaderMap,
+    Json(input): Json<EventUpdateInput>,
+) -> ApiResult<EventResponse, A> {
+    let adaptor = &state.lock().await.adaptor;
+
+    let mut event = get_owned_event(adaptor, event_id, &headers).await?;
+
+    if let Some(name) = input.name.map(|n| n.trim().to_string()) {
+        if name.is_empty() {
+            return Err(ApiError::InvalidInput("Name can't be empty"));
+        }
+        event.name = name;
+    }
+    if let Some(times) = input.times {
+        if times.is_empty() {
+            return Err(ApiError::InvalidInput("Times can't be empty"));
+        }
+        event.times = times;
+    }
+    if let Some(timezone) = input.timezone {
+        event.timezone = timezone;
+    }
+
+    let event = adaptor
+        .update_event(event)
+        .await
+        .map_err(ApiError::AdaptorError)?
+        .ok_or(ApiError::NotFound)?;
+
+    Ok(Json(event.into()))
+}
+
+#[utoipa::path(
+    delete,
+    path = "/event/{event_id}",
+    params(
+        ("event_id", description = "The ID of the event"),
+    ),
+    security(("session" = [])),
+    responses(
+        (status = 204, description = "Deleted"),
+        (status = 401, description = "Missing, invalid or expired session"),
+        (status = 403, description = "Not the owner of the event"),
+        (status = 404, description = "Not found"),
+        (status = 429, description = "Too many requests"),
+    ),
+    tag = "event",
+)]
+/// Delete an event owned by the logged in user, along with everyone's availabilities
+pub async fn delete_event<A: Adaptor>(
+    extract::State(state): State<A>,
+    Path(event_id): Path<String>,
+    headers: HeaderMap,
+) -> Result<StatusCode, ApiError<A>> {
+    let adaptor = &state.lock().await.adaptor;
+
+    let event = get_owned_event(adaptor, event_id, &headers).await?;
+
+    adaptor
+        .delete_event(event.id)
+        .await
+        .map_err(ApiError::AdaptorError)?;
+
+    Ok(StatusCode::NO_CONTENT)
+}
+
+// Get an event, making sure the logged in user owns it
+async fn get_owned_event<A: Adaptor>(
+    adaptor: &A,
+    event_id: String,
+    headers: &HeaderMap,
+) -> Result<Event, ApiError<A>> {
+    let user = require_session_user(adaptor, headers).await?;
+
+    let event = adaptor
+        .get_event(event_id)
+        .await
+        .map_err(ApiError::AdaptorError)?
+        .ok_or(ApiError::NotFound)?;
+
+    if event.owner.as_deref() != Some(user.username.as_str()) {
+        return Err(ApiError::Forbidden);
+    }
+
+    Ok(event)
 }
 
 // Generate a random name based on an adjective and a crab species

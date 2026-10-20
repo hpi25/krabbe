@@ -22,11 +22,15 @@
     "errors": {
       "name_required": "Ihr Name wird benötigt, um Ihre Verfügbarkeit zu speichern.",
       "password_incorrect": "Das Passwort ist inkorrekt. Überprüfe, ob deine Angaben richtig geschrieben sind.",
-      "unknown": "Einloggen fehlgeschlagen. Bitte versuche es erneut."
+      "unknown": "Einloggen fehlgeschlagen. Bitte versuche es erneut.",
+      "name_reserved": "Namen, die mit @ beginnen, sind für Konten reserviert."
     },
     "created_in_timezone": "Diese Veranstaltung wurde in der Zeitzone <strong>{{timezone}}</strong> erstellt. <3>Klicke hier</3> um sie zu übernehmen.",
     "local_timezone": "Deine lokale Zeitzone wird als <strong>{{timezone}}</strong> erkannt. <3>Klicke hier</3> um sie zu übernehmen.",
-    "dst_warning": "Deine Zeitzone und die Zeitzone der Veranstaltung haben unterschiedliche Sommerzeitregeln. Rund um die Zeitumstellung können sich Zeiten um etwa 1 Stunde verschieben."
+    "dst_warning": "Deine Zeitzone und die Zeitzone der Veranstaltung haben unterschiedliche Sommerzeitregeln. Rund um die Zeitumstellung können sich Zeiten um etwa 1 Stunde verschieben.",
+    "guest_button": "Als Gast eintragen",
+    "use_account": "Stattdessen dein Konto @{{username}} verwenden.",
+    "account_hint": "Melde dich an, um dein Konto bei jeder Veranstaltung zu verwenden."
   },
   "offline": {
     "title": "Du bist offline",
@@ -78,5 +82,14 @@
       }
     },
     "done": "Fertig"
+  },
+  "owner": {
+    "edit_button": "Veranstaltung bearbeiten",
+    "cancel_button": "Bearbeiten abbrechen",
+    "delete_button": "Veranstaltung löschen",
+    "delete_confirm": "Zum Löschen erneut klicken",
+    "errors": {
+      "delete": "Die Veranstaltung konnte nicht gelöscht werden. Bitte versuche es erneut."
+    }
   }
 }

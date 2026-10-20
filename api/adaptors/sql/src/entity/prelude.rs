@@ -2,6 +2,8 @@
 
 #![allow(unused_imports)]
 
+pub use super::account::Entity as Account;
 pub use super::event::Entity as Event;
 pub use super::person::Entity as Person;
+pub use super::session::Entity as Session;
 pub use super::stats::Entity as Stats;

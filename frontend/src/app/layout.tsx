@@ -1,6 +1,7 @@
 import { Metadata, Viewport } from 'next'
 import { Karla } from 'next/font/google'
 
+import AccountButton from '/src/components/AccountButton/AccountButton'
 import Egg from '/src/components/Egg/Egg'
 import Settings from '/src/components/Settings/Settings'
 import TranslateDialog from '/src/components/TranslateDialog/TranslateDialog'
@@ -45,6 +46,7 @@ const RootLayout = async ({ children }: { children: React.ReactNode }) => {
   return <html lang={resolvedLanguage ?? fallbackLng}>
     <body className={karla.className}>
       <Settings />
+      <AccountButton />
       <Egg />
       <TranslateDialog />
 
