@@ -16,6 +16,8 @@ const parser = new XMLParser({
   removeNSPrefix: true,
   ignoreAttributes: false,
   parseTagValue: false,
+  // Decodes numeric refs too: Nextcloud sends calendar-data line endings as `&#13;`.
+  htmlEntities: true,
   isArray: (name) => ['response', 'propstat', 'comp'].includes(name),
 });
 

@@ -128,6 +128,9 @@ test('fetchCalendarData sends time-range + expand and returns calendar-data incl
   assert.equal(out.length, 2);
   assert.match(out[0]!, /^BEGIN:VCALENDAR/);
   assert.match(out[0]!, /SUMMARY:Fish & chips/);
+  // Nextcloud escapes CR as &#13;; left undecoded, every line ends in junk and no VEVENT parses.
+  assert.ok(!out[0]!.includes('&#13;'));
+  assert.match(out[0]!, /^BEGIN:VEVENT\r$/m);
   assert.match(out[1]!, /SUMMARY:<cdata> party/);
 });
 
