@@ -7,7 +7,7 @@ import type {
   PickerDataResponse,
   SaveSelectionRequest,
 } from '../messages.ts';
-import { parseApplied, type ReadyInfo } from './bridge.ts';
+import { parseApplied, summarize, type ReadyInfo } from './bridge.ts';
 import css from './picker.css';
 
 const APPLIED_TIMEOUT_MS = 5000;
@@ -130,11 +130,8 @@ export function mountPicker(anchor: HTMLElement, getReady: () => ReadyInfo): voi
         );
         const removed = await applied;
         const errors = (res.errors ?? []).map((er) => `${known.get(er.calendarUrl) ?? 'Calendar'}: ${er.message}`);
-        const main =
-          removed === null
-            ? `Sent ${intervals.length} busy intervals, page didn't confirm`
-            : `Removed ${removed} slots`;
-        setStatus([main, ...errors].join('\n'), errors.length > 0);
+        const stats = (res.stats ?? []).map((st) => ({ ...st, name: known.get(st.calendarUrl) ?? 'Calendar' }));
+        setStatus(summarize({ timeStart, timeEnd, timezone, stats, errors, removed }), errors.length > 0);
         status.style.whiteSpace = 'pre-line';
       } catch (err) {
         setStatus(err instanceof Error ? err.message : 'Something went wrong', true);

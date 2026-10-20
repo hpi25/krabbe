@@ -88,7 +88,34 @@ test('rejects invalid, inverted and oversized ranges without fetching', async ()
         extractBusy: () => [],
       },
     );
-    assert.deepEqual(res, { busy: [], errors: [{ calendarUrl: '', message: 'Invalid time range' }] });
+    assert.deepEqual(res, { busy: [], errors: [{ calendarUrl: '', message: 'Invalid time range' }], stats: [] });
     assert.equal(called, false);
   }
+});
+
+test('reports per-calendar event and busy-interval counts', async () => {
+  const twoEvents = 'BEGIN:VCALENDAR\nBEGIN:VEVENT\nEND:VEVENT\nBEGIN:VEVENT\nEND:VEVENT\nEND:VCALENDAR';
+  const res = await fetchBusy(
+    settings,
+    { ...req, calendarUrls: ['https://dav.example/c1/', 'https://dav.example/c2/'] },
+    {
+      fetchCalendarData: async (_c, url) => (url.endsWith('c1/') ? [twoEvents, 'BEGIN:VEVENT\nEND:VEVENT'] : []),
+      extractBusy: (ics) => (ics === twoEvents ? [{ start: 1, end: 2 }] : []),
+    },
+  );
+  assert.deepEqual(res.stats, [
+    { calendarUrl: 'https://dav.example/c1/', events: 3, intervals: 1 },
+    { calendarUrl: 'https://dav.example/c2/', events: 0, intervals: 0 },
+  ]);
+});
+
+test('failed calendars and invalid ranges report no stats', async () => {
+  const failed = await fetchBusy(
+    settings,
+    { ...req, calendarUrls: ['https://dav.example/c1/'] },
+    { fetchCalendarData: async () => { throw new Error('boom'); }, extractBusy: () => [] },
+  );
+  assert.deepEqual(failed.stats, []);
+  const invalid = await fetchBusy(settings, { ...req, timeEnd: req.timeStart });
+  assert.deepEqual(invalid.stats, []);
 });

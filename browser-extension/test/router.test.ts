@@ -6,7 +6,7 @@ const fetchMsg = { type: 'fetch-busy' as const, calendarUrls: [], timeStart: 'a'
 const base: RouterDeps = {
   getSettings: async () => ({ krabbeUrl: '', accounts: [], selectedCalendars: [] }),
   saveSettings: async () => undefined,
-  fetchBusy: async () => ({ busy: [], errors: [] }),
+  fetchBusy: async () => ({ busy: [], errors: [], stats: [] }),
   discoverCalendars: async () => [{ url: 'u', name: 'n' }],
   openOptionsPage: () => undefined,
   extensionBaseUrl: 'moz-extension://abc/',
@@ -18,7 +18,7 @@ const once = (msg: Parameters<typeof routeMessage>[0], sender: { tab?: unknown; 
 
 test('rejecting getSettings still replies', async () => {
   const r = await once(fetchMsg, {}, { ...base, getSettings: async () => { throw new Error('storage down'); } });
-  assert.deepEqual(r, { busy: [], errors: [{ calendarUrl: '', message: 'storage down' }] });
+  assert.deepEqual(r, { busy: [], errors: [{ calendarUrl: '', message: 'storage down' }], stats: [] });
 });
 
 const discover = { type: 'discover' as const, creds: { serverUrl: 'x', username: 'u', password: 'p' } };
@@ -39,7 +39,7 @@ test('discover from options page opened in a tab works', async () => {
 
 test('synchronously throwing getSettings still replies', async () => {
   const r = await once(fetchMsg, {}, { ...base, getSettings: () => { throw new Error('sync'); } });
-  assert.deepEqual(r, { busy: [], errors: [{ calendarUrl: '', message: 'sync' }] });
+  assert.deepEqual(r, { busy: [], errors: [{ calendarUrl: '', message: 'sync' }], stats: [] });
 });
 
 test('unknown message is not handled', () => {

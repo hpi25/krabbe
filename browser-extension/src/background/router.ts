@@ -43,7 +43,7 @@ export function routeMessage(
       Promise.resolve()
         .then(() => deps.getSettings())
         .then((s) => deps.fetchBusy(s, msg))
-        .catch((e): FetchBusyResponse => ({ busy: [], errors: [{ calendarUrl: '', message: errMsg(e) }] }))
+        .catch((e): FetchBusyResponse => ({ busy: [], errors: [{ calendarUrl: '', message: errMsg(e) }], stats: [] }))
         .then(reply);
       return true;
     case 'picker-data':
