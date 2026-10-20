@@ -1,3 +1,5 @@
+import { DEFAULT_KRABBE_URL, originPattern } from './storage.ts';
+
 export type Target = 'firefox';
 
 export function buildManifest(target: Target): Record<string, unknown> {
@@ -19,6 +21,8 @@ export function buildManifest(target: Target): Record<string, unknown> {
     background: { scripts: ['background.js'] },
     options_ui: { page: 'options.html', open_in_tab: true },
     permissions: ['storage', 'scripting'],
+    // Granted at install, so the default instance works without a trip to the settings page.
+    host_permissions: [originPattern(DEFAULT_KRABBE_URL)],
     optional_host_permissions: ['*://*/*'],
   };
   if (target === 'firefox') {

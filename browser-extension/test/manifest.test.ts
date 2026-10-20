@@ -9,6 +9,8 @@ test('firefox manifest is MV3 with the expected shape', () => {
   assert.equal(m.browser_specific_settings.gecko.id, 'krabbe-calendar@hpi.church');
   assert.deepEqual(m.options_ui, { page: 'options.html', open_in_tab: true });
   assert.deepEqual(m.optional_host_permissions, ['*://*/*']);
+  // Firefox grants required host permissions at install, so the default instance works without visiting settings.
+  assert.deepEqual(m.host_permissions, ['https://krabbe.hpi.church/*']);
   assert.ok(m.permissions.includes('storage'));
   assert.ok(m.permissions.includes('scripting'));
   assert.equal('content_scripts' in m, false);

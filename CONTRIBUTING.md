@@ -4,17 +4,11 @@
 
 If you find any bugs or have a feature request, please [create an issue](https://github.com/hpi25/krabbe/issues/new/choose).
 
-## Translating
-
-If you speak a language other than English and you want to help translate Star Fit, visit [Star Fit on Transifex](https://explore.transifex.com/star-fit/star-fit/) and click "Join this project".
-
-For more information on how to translate, visit the [translating wiki page](./wiki/Translating.md).
-
 ## Local Development
 
 This is a guide on getting Star Fit working locally for development purposes. You should first follow this if you're thinking of making a [pull request](#pull-requests).
 
-Note: if you'd like to get Star Fit running because you want to have your own instance, please instead follow the [self-hosting](./wiki/Self%E2%80%90hosting.md) guide.
+Note: if you'd like to get Star Fit running because you want to have your own instance, please instead follow the [self-hosting](./DEPLOYMENT.md) guide.
 
 ### Software
 
@@ -75,7 +69,7 @@ To load it into Firefox:
 
    Then add an account with server URL `http://localhost:5232` and any username and password, for example `test` / `test`.
 
-   Firefox host permissions include the port, so the permission prompts are for `http://localhost:5232/*` (the CalDAV server) and `http://localhost:1234/*` (krabbe). If you change the port, grant access again in the extension's settings page.
+   Firefox match patterns can't contain a port, so the extension asks for `http://localhost/*`, which covers both krabbe on `:1234` and the CalDAV server on `:5232`. `https://krabbe.hpi.church/*` is granted at install, so production works without visiting the settings page.
 
 After rebuilding, click **Reload** on the extension in `about:debugging` to pick up the changes.
 

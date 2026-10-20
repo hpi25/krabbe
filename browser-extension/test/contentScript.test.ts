@@ -24,12 +24,19 @@ function install(unregisterThrows = false) {
 
 test('re-registers and removes old origin permission', async () => {
   const calls = install();
-  await syncContentScript('https://new.example', 'https://krabbe.hpi.church');
+  await syncContentScript('https://new.example', 'https://old.example');
   assert.deepEqual(calls, [
     ['unregister', { ids: ['krabbe-bridge'] }],
     ['register', [{ id: 'krabbe-bridge', matches: ['https://new.example/*'], js: ['content.js'], runAt: 'document_idle', persistAcrossSessions: false }]],
-    ['remove', { origins: ['https://krabbe.hpi.church/*'] }],
+    ['remove', { origins: ['https://old.example/*'] }],
   ]);
+});
+
+test('never removes the default krabbe origin, which the manifest requires', async () => {
+  const calls = install();
+  await syncContentScript('https://new.example', 'https://krabbe.hpi.church');
+  assert.equal(calls.filter((c) => c[0] === 'remove').length, 0);
+  assert.equal(calls.filter((c) => c[0] === 'register').length, 1);
 });
 
 test('ignores unregister failure; no remove without previous or same origin', async () => {
@@ -42,7 +49,7 @@ test('ignores unregister failure; no remove without previous or same origin', as
 
 test('keeps the old origin permission when an account server lives there', async () => {
   const calls = install();
-  await syncContentScript('https://new.example', 'https://krabbe.hpi.church', [{ serverUrl: 'https://krabbe.hpi.church/dav' }]);
+  await syncContentScript('https://new.example', 'https://old.example', [{ serverUrl: 'https://old.example/dav' }]);
   assert.equal(calls.filter((c) => c[0] === 'remove').length, 0);
   assert.equal(calls.filter((c) => c[0] === 'register').length, 1);
 });
