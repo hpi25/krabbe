@@ -151,7 +151,7 @@ export function extractBusy(ics: string, opts: ExtractOptions): BusyInterval[] {
       const kind = prop.value.trim().toUpperCase();
       if (kind === 'VEVENT' && props) {
         const interval = eventToInterval(props, opts);
-        if (interval) result.push(interval);
+        if (interval && interval.end > interval.start) result.push(interval);
         props = null;
       }
       stack.pop();

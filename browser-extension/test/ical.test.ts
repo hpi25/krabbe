@@ -82,10 +82,14 @@ test('all-day DTEND is exclusive', () => {
   ]);
 });
 
-test('date-time without DTEND or DURATION is zero-length', () => {
+test('date-time without DTEND or DURATION is zero-length and dropped', () => {
   const ics = cal(ev('DTSTART:20261020T090000Z'));
-  const t = Date.UTC(2026, 9, 20, 9);
-  assert.deepEqual(extractBusy(ics, BERLIN), [{ start: t, end: t }]);
+  assert.deepEqual(extractBusy(ics, BERLIN), []);
+});
+
+test('event inside the spring-forward gap collapses and is dropped', () => {
+  const ics = cal(ev('DTSTART;TZID=Europe/Berlin:20260329T023000', 'DTEND;TZID=Europe/Berlin:20260329T033000'));
+  assert.deepEqual(extractBusy(ics, BERLIN), []);
 });
 
 test('unexpanded RRULE master yields only the first occurrence', () => {
