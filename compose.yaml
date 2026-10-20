@@ -26,6 +26,8 @@ services:
     environment:
       # Server-side requests go straight to the api service
       API_URL: http://api:3000/api
+      # Used for share links, metadata and the sitemap
+      FRONTEND_URL: ${FRONTEND_URL:?FRONTEND_URL must be set}
     depends_on:
       - api
 

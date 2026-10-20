@@ -2,7 +2,7 @@
 
 ## Creating Issues
 
-If you find any bugs or have a feature request, please [create an issue](https://github.com/drinkablebreeze/starbestfit.com/issues/new/choose).
+If you find any bugs or have a feature request, please [create an issue](https://github.com/hpi25/krabbe/issues/new/choose).
 
 ## Translating
 

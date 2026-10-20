@@ -1,7 +1,7 @@
 # Star Fit <img width="100" align="right" src="frontend/src/res/logo.svg" alt="avatar">
 
-[![Frontend Checks](https://github.com/drinkablebreeze/starbestfit.com/actions/workflows/check_frontend.yml/badge.svg)](https://github.com/drinkablebreeze/starbestfit.com/actions/workflows/check_frontend.yml)
-[![API Checks](https://github.com/drinkablebreeze/starbestfit.com/actions/workflows/check_api.yml/badge.svg)](https://github.com/drinkablebreeze/starbestfit.com/actions/workflows/check_api.yml)
+[![Frontend Checks](https://github.com/hpi25/krabbe/actions/workflows/check_frontend.yml/badge.svg)](https://github.com/hpi25/krabbe/actions/workflows/check_frontend.yml)
+[![API Checks](https://github.com/hpi25/krabbe/actions/workflows/check_api.yml/badge.svg)](https://github.com/hpi25/krabbe/actions/workflows/check_api.yml)
 
 Align your schedules to find the perfect time that works for everyone.
 Open-source and licensed under the [GNU GPLv3](./LICENSE).
@@ -10,7 +10,7 @@ Star Fit is a fork of [Crab Fit](https://github.com/GRA0007/crab.fit) that suppo
 
 ### ⭐️ Bugs or feature requests
 
-If you find any bugs or have a feature request, please [create an issue](https://github.com/drinkablebreeze/starbestfit.com/issues/new/choose).
+If you find any bugs or have a feature request, please [create an issue](https://github.com/hpi25/krabbe/issues/new/choose).
 
 ### 🌐 Translations
 

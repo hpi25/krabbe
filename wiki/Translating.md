@@ -19,7 +19,6 @@ You can also check the resource you're translating for info on where you can fin
 | --- | --- |
 | common.json | Common strings used on all pages in places like the header/footer, and settings. |
 | home.json | Strings used on the homepage, including the event creation form and the about info. |
-| privacy.json | Strings used on the [privacy policy page](https://starbestfit.com/privacy). |
 | help.json | Strings used on the [help page](https://starbestfit.com/how-to). |
 | event.json | Strings used on an event's page, including heatmap and filtering terminology. |
 

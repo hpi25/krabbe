@@ -1,10 +1,9 @@
 {
-  "name": "Crab Fit",
   "tagline": "Erstelle dein eigenes",
-  "cta": "Erstelle deinen Crab Fit!",
+  "cta": "Erstelle deinen $t(common:name)!",
   "created": "Erstellt am {{date}}",
   "donate": {
-    "info": "Danke, dass du Crab Fit verwendest. Wenn es dir gefällt, unterstütze uns doch!",
+    "info": "Danke, dass du $t(common:name) verwendest. Wenn es dir gefällt, unterstütze uns doch!",
     "button": "Spenden",
     "title": "Jeder Beitrag zählt :)"
   },
@@ -45,11 +44,7 @@
     },
     "colormap": {
       "label": "Heatmap Farben",
-      "classic": "Crab Fit (klassisch)"
+      "classic": "$t(common:name) (klassisch)"
     }
-  },
-  "video": {
-    "title": "Crab Fit Promo Video",
-    "button": "Unser Video"
   }
 }

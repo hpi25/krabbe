@@ -40,6 +40,8 @@ After you have chosen your infrastructure, you'll need to make sure the correct 
 | --- | --- | --- |
 | `NEXT_PUBLIC_API_URL` | `https://api.starbestfit.com` | This needs to be set to where your API will be hosted, so the frontend can communicate with it. Defaults to `/api`, which is relative to the frontend's domain. |
 | `API_URL` | `http://api:3000/api` | An absolute url the frontend server uses to reach the API. Required when `NEXT_PUBLIC_API_URL` is relative, as server-side requests can't resolve relative urls. Read at runtime. |
+| `FRONTEND_URL` | `https://krabbe.example.com` | The public address of the frontend, used for share links, metadata and the sitemap. Defaults to `http://localhost:1234`. Read at runtime. |
+| `FRONTEND_URL` | `https://krabbe.example.com` | The public address of the frontend, used for share links, metadata and the sitemap. Defaults to `http://localhost:1234`. Read at runtime. |
 | `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | `123-abc.apps.googleusercontent.com` | If you want the Google Calendar sync button to be enabled, you'll need to set up a Google oauth screen and API key. You can follow the steps in [this Google guide](https://developers.google.com/calendar/api/quickstart/js) until you reach "Set up the sample" to get started. |
 | `NEXT_PUBLIC_GOOGLE_API_KEY` | `AIzaabcdefghijklmnopqrstuvwxyz` | See above |
 

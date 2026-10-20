@@ -5,7 +5,7 @@ labels:
 body:
   - type: markdown
     attributes:
-      value: Check to make sure someone hasn't already opened a similar [issue](https://github.com/drinkablebreeze/starbestfit.com/issues).
+      value: Check to make sure someone hasn't already opened a similar [issue](https://github.com/hpi25/krabbe/issues).
 
   - type: textarea
     attributes:

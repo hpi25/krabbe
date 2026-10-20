@@ -2,7 +2,6 @@
   "stars_one": "{{count}} star",
   "stars_other": "{{count}} stars",
   "greyed_times": "This area is greyed out because it's not part of the event. You may be looking at this event in a different timezone from where it was created.",
-
   "nav": {
     "title": "Click to copy",
     "copied": "Copied!",
@@ -14,40 +13,34 @@
   "form": {
     "signed_out": "Sign in to add your preferences",
     "signed_in": "Signed in as {{name}}",
-
     "name": "Your name",
     "password": "Password (optional)",
     "button": "Login",
     "logout_button": "Sign out",
     "info": "These details are only for this event. Use a password to prevent others from changing your preferences.",
-
     "timezone": "Your time zone",
-
     "errors": {
       "name_required": "Your name is needed to store your preferences.",
       "password_incorrect": "Password is incorrect. Check your name is spelled right.",
       "unknown": "Failed to login. Please try again."
     },
-
     "created_in_timezone": "This event was created in the timezone <strong>{{timezone}}</strong>. <3>Click here</3> to use it.",
     "local_timezone": "Your local timezone is detected to be <strong>{{timezone}}</strong>. <3>Click here</3> to use it.",
     "dst_warning": "Your timezone and the event timezone have different daylight saving rules. Times may shift by ~1 hour near DST transitions."
   },
   "offline": {
     "title": "You are offline",
-    "body": "A Star Fit doesn't work offline.<br />Make sure you're connected to the internet and try again."
+    "body": "A $t(common:name) doesn't work offline.<br />Make sure you're connected to the internet and try again."
   },
   "error": {
     "title": "Event not found",
     "body": "Check that the url you entered is correct. Note that to protect your privacy, events are deleted after 3 months of inactivity."
   },
-
   "tabs": {
     "you": "Your preferences",
     "you_tooltip": "Login to set your preferences",
     "group": "Group preferences"
   },
-
   "group": {
     "legend_tooltip": "Click to highlight highest preference",
     "info1": "Hover or tap the calendar below to see preferences, and click to copy details about a time slot",
@@ -62,7 +55,6 @@
     "people_one": "{{count}} person",
     "people_other": "{{count}} people"
   },
-
   "you": {
     "info": "Click and drag the calendar below to set your preferences. They are automatically saved.",
     "scoring_info": "The best time is calculated with <1>STAR Voting</1>. Give your preferred times five stars, your last choices zero stars, and score other times as desired.",
@@ -70,7 +62,6 @@
     "select_all": "Select all",
     "select_none": "Select none",
     "select_invert": "Invert selection",
-
     "google_cal": "Sync with Google Calendar",
     "outlook_cal": "Sync with Outlook Calendar",
     "recent_event": "Sync with a recent event",

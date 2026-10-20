@@ -5,6 +5,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
 import Button from '/src/components/Button/Button'
+import { useTranslation } from '/src/i18n/client'
 import { languages } from '/src/i18n/options'
 import { useStore } from '/src/stores'
 
@@ -24,6 +25,7 @@ const useTranslateStore = create<TranslateStore>()(persist(
 ))
 
 const TranslateDialog = () => {
+  const { t } = useTranslation('common')
   const [isSupported, setIsSupported] = useState(true)
   const store = useStore(useTranslateStore, state => state)
 
@@ -34,8 +36,8 @@ const TranslateDialog = () => {
 
   return (store?.translateDialogDismissed === false && !isSupported) ? <div className={styles.popup}>
     <div>
-      <h2>Translate Star Fit</h2>
-      <p>Star Fit hasn't been translated to your language yet.</p>
+      <h2>Translate {t('name')}</h2>
+      <p>{t('name')} hasn't been translated to your language yet.</p>
     </div>
 
     <div className={styles.buttons}>

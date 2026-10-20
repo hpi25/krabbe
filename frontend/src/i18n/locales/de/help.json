@@ -1,22 +1,15 @@
 {
-  "name": "Crab Fit benutzen",
-
-  "p1": "Crab Fit hilft dir dabei, Dinge mit deinen Freunden oder Arbeitskollegen zu planen. Erstelle einen Termin, gib deine Verfügbarkeit ein, teile den Link, und sieh wann wer Zeit hat!",
+  "name": "$t(common:name) benutzen",
+  "p1": "$t(common:name) hilft dir dabei, Dinge mit deinen Freunden oder Arbeitskollegen zu planen. Erstelle einen Termin, gib deine Verfügbarkeit ein, teile den Link, und sieh wann wer Zeit hat!",
   "p2": "Unten stehen detaillierte Schritte wie du deinen Termin crab-fitten kannst.",
-
   "s1": "Schritt 1",
-
   "p3": "Benutze das Formular auf <1>crab.fit</1>, um einen neuen Termin zu erfassen. Du brauchst nur einen groben Zeitrahmen für den Termin anzugeben, aber noch nicht deine Verfügbarkeit",
   "p4": "Beispiel: \"Jennys Geburtstags-Lunch\". Jenny will den Lunch in derselben Woche haben wie ihren Geburtstag, den 15. April, aber sie weiss, dass nicht alle ihre Freunde am 15. frei sind. Sie will ihn auch nicht am Wochenende",
   "p5": "Jenny weiss auch, dass der Lunch zwischen 11 und 5 Uhr stattfinden muss.",
-
   "s2": "Schritt 2",
-
   "p6": "Gib deine verfügbare Zeit an für den Termin, den du eben erstellt hast.",
   "p7": "In unserem Beispiel gibt Jenny an, dass sie an allen Tagen ausser Dienstag und Mittwoch nach 3 Uhr und auch nicht vor 1 Uhr am Freitag.",
-
   "s3": "Schritt 3",
-
   "p8": "Schicke den Link an alle, die du einladen willst.",
   "p9": "Nachdem Jenny den Link an ihre Freunde geschickt hat, und nachdem alle ihre Zeiten eingetragen haben, kann sie auf der Heatmap sehen, wann die meisten Leute verfügbar sind. Sie wählt die dunkelsten Flächen für die Zeit, die für alle am besten passt.",
   "p10": "In diesem Beispiel passt der Freitag von 1 bis 3 Uhr für alle am besten."

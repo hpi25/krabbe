@@ -10,7 +10,6 @@ import Header from '/src/components/Header/Header'
 import { P } from '/src/components/Paragraph/Text'
 import Section from '/src/components/Section/Section'
 import TimeRangeField from '/src/components/TimeRangeField/TimeRangeField'
-import Video from '/src/components/Video/Video'
 import { deserializePersonResponse } from '/src/config/api'
 import { useTranslation } from '/src/i18n/server'
 import { calculateTable, getWeekdayNames, range, rotateArray } from '/src/utils'
@@ -39,8 +38,6 @@ const Page = async () => {
       <Header />
 
       <h1>{t('help:name')}</h1>
-
-      <Video />
 
       <P><Trans i18nKey="help:p1" t={t} i18n={i18n}>_<a href="https://starvoting.org/star" target="_blank" rel="noreferrer noopener">_</a>_</Trans></P>
       <P>{t('help:p2')}</P>

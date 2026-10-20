@@ -8,18 +8,19 @@ import styles from './EventInfo.module.scss'
 
 interface EventInfoProps {
   event: EventResponse
+  frontendUrl: string
 }
 
-const EventInfo = ({ event }: EventInfoProps) => {
+const EventInfo = ({ event, frontendUrl }: EventInfoProps) => {
   const { t, i18n } = useTranslation('event')
 
   return <div className={styles.wrapper}>
     <h2>{event.name}</h2>
     <Copyable className={styles.info}>
-      {`https://starbestfit.com/${event.id}`}
+      {`${frontendUrl}/${event.id}`}
     </Copyable>
     <p className={styles.info}>
-      <Trans i18nKey="event:nav.shareinfo_alt" t={t} i18n={i18n}>_<a href={`mailto:?subject=${encodeURIComponent(t('nav.email_subject', { event_name: event.name }))}&body=${encodeURIComponent(`${t('nav.email_body')} https://starbestfit.com/${event.id}`)}`} target="_blank">_</a>_</Trans>
+      <Trans i18nKey="event:nav.shareinfo_alt" t={t} i18n={i18n}>_<a href={`mailto:?subject=${encodeURIComponent(t('nav.email_subject', { event_name: event.name }))}&body=${encodeURIComponent(`${t('nav.email_body')} ${frontendUrl}/${event.id}`)}`} target="_blank">_</a>_</Trans>
     </p>
   </div>
 }

@@ -42,7 +42,7 @@ ENV NODE_ENV=production \
     PORT=3000
 
 # Set API_URL to an absolute url (e.g. http://api:3000/api) for server-side requests
-# when the API url is relative
+# when the API url is relative, and FRONTEND_URL to the public url of the frontend
 
 WORKDIR /app
 

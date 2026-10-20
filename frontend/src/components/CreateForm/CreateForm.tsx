@@ -38,7 +38,7 @@ const defaultValues: Fields = {
   timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
 }
 
-const CreateForm = ({ noRedirect }: { noRedirect?: boolean }) => {
+const CreateForm = ({ noRedirect, frontendUrl }: { noRedirect?: boolean, frontendUrl: string }) => {
   const { t } = useTranslation('home')
   const { push } = useRouter()
 
@@ -121,7 +121,7 @@ const CreateForm = ({ noRedirect }: { noRedirect?: boolean }) => {
     }
   }
 
-  return createdEvent ? <EventInfo event={createdEvent} /> : <form
+  return createdEvent ? <EventInfo event={createdEvent} frontendUrl={frontendUrl} /> : <form
     style={{ marginBlockEnd: noRedirect ? 30 : 60 }}
     onSubmit={handleSubmit(onSubmit)}
     id="create"

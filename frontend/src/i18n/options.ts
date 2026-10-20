@@ -3,16 +3,14 @@ import { BackendModule, InitOptions } from 'i18next'
 export const fallbackLng = 'en'
 export const defaultNS = 'common'
 export const cookieName = 'i18next'
-export const languages = [
-  fallbackLng,
-  'en-GB', 'de', 'es', 'fr', 'hi', 'id', 'it', 'ja', 'ko', 'pl', 'pt-PT', 'pt-BR', 'ru',
-] as const
+export const languages = [fallbackLng, 'de'] as const
 
 export const getOptions = (lng = fallbackLng, ns: InitOptions['ns'] = defaultNS): InitOptions => ({
   lng,
   fallbackLng,
   supportedLngs: languages,
-  ns,
+  // Always load the default namespace, as other strings nest from it (e.g. the instance name)
+  ns: [...new Set([ns, defaultNS].flat())],
   fallbackNS: defaultNS,
   defaultNS,
   // debug: true,
@@ -49,74 +47,9 @@ export const languageDetails: Record<typeof languages[number], LanguageDetails> 
     weekStart: 0,
     timeFormat: '12h',
   },
-  'en-GB': { // English (UK)
-    name: 'English (UK)',
-    weekStart: 1,
-    timeFormat: '12h',
-  },
   'de': { // German
     name: 'Deutsch',
     weekStart: 1,
     timeFormat: '24h',
-  },
-  'es': { // Spanish
-    name: 'Español',
-    weekStart: 1,
-    timeFormat: '24h',
-  },
-  'fr': { // French
-    name: 'Français',
-    weekStart: 1,
-    timeFormat: '24h',
-  },
-  'hi': { // Hindi
-    name: 'हिंदी',
-    weekStart: 1,
-    timeFormat: '12h',
-  },
-  'id': { // Indonesian
-    name: 'Indonesia',
-    weekStart: 1,
-    timeFormat: '24h',
-  },
-  'it': { // Italian
-    name: 'Italiano',
-    weekStart: 1,
-    timeFormat: '24h',
-  },
-  'ja': { // Japanese
-    name: '日本語',
-    weekStart: 0,
-    timeFormat: '12h',
-  },
-  'ko': { // Korean
-    name: '한국어',
-    weekStart: 0,
-    timeFormat: '24h',
-  },
-  'pl': { // Polish
-    name: 'Polskie',
-    weekStart: 1,
-    timeFormat: '12h',
-  },
-  'pt-PT': { // Portuguese (Portugal)
-    name: 'Português (do Portugal)',
-    weekStart: 0,
-    timeFormat: '24h',
-  },
-  'pt-BR': { // Portuguese (Brazil)
-    name: 'Português (do Brasil)',
-    weekStart: 0,
-    timeFormat: '24h',
-  },
-  'ru': { // Russian
-    name: 'Pусский',
-    weekStart: 1,
-    timeFormat: '24h',
-  },
-  // 'zh-CN': { // Chinese
-  //   name: '中文',
-  //   weekStart: 1,
-  //   timeFormat: '12h',
-  // },
+  }
 }

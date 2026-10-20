@@ -1,10 +1,10 @@
 {
-  "name": "Star Fit",
+  "name": "Krabbe Sportlich",
   "tagline": "Create your own",
-  "cta": "Create your own Star Fit!",
+  "cta": "Create your own $t(common:name)!",
   "created": "Created {{date}}",
   "donate": {
-    "info": "Thank you for using Star Fit. If you like it, consider donating.",
+    "info": "Thank you for using $t(common:name). If you like it, consider donating.",
     "button": "Donate",
     "title": "Every amount counts :)"
   },
@@ -45,11 +45,7 @@
     },
     "colormap": {
       "label": "Heatmap colors",
-      "classic": "Star Fit (classic)"
+      "classic": "$t(common:name) (classic)"
     }
-  },
-  "video": {
-    "title": "Star Fit Promotional Video",
-    "button": "Watch the video"
   }
 }
