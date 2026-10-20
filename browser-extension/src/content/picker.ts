@@ -1,7 +1,13 @@
 import { ext } from '../platform.ts';
-import { getSettings, saveSettings } from '../storage.ts';
-import type { FetchBusyRequest, FetchBusyResponse, OpenOptionsRequest } from '../messages.ts';
-import { parseApplied, pickerGroups, type ReadyInfo } from './bridge.ts';
+import type {
+  FetchBusyRequest,
+  FetchBusyResponse,
+  OpenOptionsRequest,
+  PickerDataRequest,
+  PickerDataResponse,
+  SaveSelectionRequest,
+} from '../messages.ts';
+import { parseApplied, type ReadyInfo } from './bridge.ts';
 import css from './picker.css';
 
 const APPLIED_TIMEOUT_MS = 5000;
@@ -52,12 +58,17 @@ export function mountPicker(anchor: HTMLElement, getReady: () => ReadyInfo): voi
 
   let busy = false;
 
-  async function renderPanel(): Promise<void> {
-    const settings = await getSettings();
+  async function loadGroups(): Promise<PickerDataResponse['groups']> {
+    const req: PickerDataRequest = { type: 'picker-data' };
+    const res = (await ext.runtime.sendMessage(req)) as PickerDataResponse | undefined;
+    return Array.isArray(res?.groups) ? res.groups : [];
+  }
+
+  async function renderPanel(groups: PickerDataResponse['groups']): Promise<void> {
     panel.replaceChildren();
     const inputs: { url: string; input: HTMLInputElement }[] = [];
     const known = new Map<string, string>();
-    for (const group of pickerGroups(settings)) {
+    for (const group of groups) {
       const g = el('div', 'group');
       g.append(el('div', 'group-label', group.label));
       for (const cal of group.calendars) {
@@ -101,7 +112,8 @@ export function mountPicker(anchor: HTMLElement, getReady: () => ReadyInfo): voi
           return;
         }
         setStatus('Fetching events…');
-        await saveSettings({ selectedCalendars: calendarUrls });
+        const save: SaveSelectionRequest = { type: 'save-selection', calendarUrls };
+        await ext.runtime.sendMessage(save);
         const { timeStart, timeEnd, timezone } = getReady();
         const req: FetchBusyRequest = { type: 'fetch-busy', calendarUrls, timeStart, timeEnd, timezone };
         const res = (await ext.runtime.sendMessage(req)) as FetchBusyResponse | undefined;
@@ -138,12 +150,12 @@ export function mountPicker(anchor: HTMLElement, getReady: () => ReadyInfo): voi
       panel.hidden = true;
       return;
     }
-    const settings = await getSettings();
-    if (settings.accounts.length === 0) {
+    const groups = await loadGroups();
+    if (groups.length === 0) {
       openOptions();
       return;
     }
-    await renderPanel();
+    await renderPanel(groups);
     panel.hidden = false;
   });
 }

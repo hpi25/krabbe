@@ -5,6 +5,7 @@ import { routeMessage, type RouterDeps } from '../src/background/router.ts';
 const fetchMsg = { type: 'fetch-busy' as const, calendarUrls: [], timeStart: 'a', timeEnd: 'b', timezone: 'UTC' };
 const base: RouterDeps = {
   getSettings: async () => ({ krabbeUrl: '', accounts: [], selectedCalendars: [] }),
+  saveSettings: async () => undefined,
   fetchBusy: async () => ({ busy: [], errors: [] }),
   discoverCalendars: async () => [{ url: 'u', name: 'n' }],
   openOptionsPage: () => undefined,
@@ -43,4 +44,46 @@ test('synchronously throwing getSettings still replies', async () => {
 
 test('unknown message is not handled', () => {
   assert.equal(routeMessage({ type: 'nope' } as never, {}, () => {}, base), false);
+});
+
+test('picker-data replies with groups only, no credentials', async () => {
+  const settings = {
+    krabbeUrl: 'https://k',
+    selectedCalendars: ['u1', 'gone'],
+    accounts: [
+      { id: 'a', label: 'Work', serverUrl: 'https://secret.example', username: 'alice', password: 'hunter2', calendars: [
+        { url: 'u1', name: 'Main', color: '#f00', countAllDay: false },
+        { url: 'u2', name: 'Other', countAllDay: false },
+      ] },
+      { id: 'b', label: 'Home', serverUrl: 's', username: 'u', password: 'p', calendars: [] },
+    ],
+  };
+  const r = await once({ type: 'picker-data' }, { tab: {}, url: 'https://k/x' }, { ...base, getSettings: async () => settings });
+  assert.deepEqual(r, {
+    groups: [
+      { label: 'Work', calendars: [
+        { url: 'u1', name: 'Main', color: '#f00', checked: true },
+        { url: 'u2', name: 'Other', checked: false },
+      ] },
+      { label: 'Home', calendars: [] },
+    ],
+  });
+  assert.ok(!/hunter2|alice|secret\.example/.test(JSON.stringify(r)));
+});
+
+test('picker-data with failing storage replies with empty groups', async () => {
+  const r = await once({ type: 'picker-data' }, {}, { ...base, getSettings: async () => { throw new Error('x'); } });
+  assert.deepEqual(r, { groups: [] });
+});
+
+test('save-selection persists only selectedCalendars', async () => {
+  const saved: unknown[] = [];
+  const r = await once({ type: 'save-selection', calendarUrls: ['a', 'b'] }, {}, { ...base, saveSettings: async (p) => { saved.push(p); } });
+  assert.deepEqual(r, { ok: true });
+  assert.deepEqual(saved, [{ selectedCalendars: ['a', 'b'] }]);
+});
+
+test('save-selection reports storage errors', async () => {
+  const r = await once({ type: 'save-selection', calendarUrls: [] }, {}, { ...base, saveSettings: async () => { throw new Error('full'); } });
+  assert.deepEqual(r, { ok: false, error: 'full' });
 });

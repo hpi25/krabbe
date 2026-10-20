@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseReady, parseApplied, pickerGroups } from '../src/content/bridge.ts';
+import { parseReady, parseApplied } from '../src/content/bridge.ts';
 import type { Settings } from '../src/storage.ts';
 
 const ready = { source: 'krabbe', type: 'calendar-bridge:ready', timeStart: 'a', timeEnd: 'b', timezone: 'Europe/Berlin' };
@@ -27,25 +27,4 @@ test('parseApplied', () => {
   assert.equal(parseApplied({ ...m, source: 'x' }), null);
   assert.equal(parseApplied({ ...m, type: 'calendar-bridge:ready' }), null);
   assert.equal(parseApplied(undefined), null);
-});
-
-test('pickerGroups groups by account, checks selected, ignores stale', () => {
-  const settings: Settings = {
-    krabbeUrl: 'https://k',
-    selectedCalendars: ['u1', 'gone'],
-    accounts: [
-      { id: 'a', label: 'Work', serverUrl: 's', username: 'u', password: 'p', calendars: [
-        { url: 'u1', name: 'Main', color: '#f00', countAllDay: false },
-        { url: 'u2', name: 'Other', countAllDay: false },
-      ] },
-      { id: 'b', label: 'Home', serverUrl: 's', username: 'u', password: 'p', calendars: [] },
-    ],
-  };
-  assert.deepEqual(pickerGroups(settings), [
-    { label: 'Work', calendars: [
-      { url: 'u1', name: 'Main', color: '#f00', checked: true },
-      { url: 'u2', name: 'Other', color: undefined, checked: false },
-    ] },
-    { label: 'Home', calendars: [] },
-  ]);
 });

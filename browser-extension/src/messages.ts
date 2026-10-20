@@ -16,7 +16,29 @@ export interface FetchBusyRequest {
 export interface OpenOptionsRequest {
   type: 'open-options';
 }
-export type Message = DiscoverRequest | FetchBusyRequest | OpenOptionsRequest;
+export interface PickerDataRequest {
+  type: 'picker-data';
+}
+export interface SaveSelectionRequest {
+  type: 'save-selection';
+  calendarUrls: string[];
+}
+export type Message = DiscoverRequest | FetchBusyRequest | OpenOptionsRequest | PickerDataRequest | SaveSelectionRequest;
+
+export interface PickerCalendar {
+  url: string;
+  name: string;
+  color?: string;
+  checked: boolean;
+}
+export interface PickerGroup {
+  label: string;
+  calendars: PickerCalendar[];
+}
+/** The only calendar-related data content scripts ever see: no credentials, no server URLs. */
+export interface PickerDataResponse {
+  groups: PickerGroup[];
+}
 
 export type DiscoverResponse = { calendars: Pick<CalendarSettings, 'url' | 'name' | 'color'>[] } | { error: string };
 export interface FetchBusyResponse {

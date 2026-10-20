@@ -4,10 +4,11 @@ import { routeMessage } from './background/router.ts';
 import { syncContentScript } from './background/contentScript.ts';
 import type { Message } from './messages.ts';
 import { ext } from './platform.ts';
-import { getSettings, originPattern } from './storage.ts';
+import { getSettings, originPattern, saveSettings } from './storage.ts';
 
 const routerDeps = {
   getSettings,
+  saveSettings,
   fetchBusy,
   discoverCalendars,
   openOptionsPage: () => ext.runtime.openOptionsPage(),
