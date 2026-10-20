@@ -13,6 +13,7 @@ import styles from './AvailabilityEditor.module.scss'
 import GoogleCalendar from './components/GoogleCalendar/GoogleCalendar'
 import RecentEvents from './components/RecentEvents/RecentEvents'
 import ScoreSelector from './components/ScoreSelector/ScoreSelector'
+import { useCalendarBridge } from './useCalendarBridge'
 import viewerStyles from '../AvailabilityViewer/AvailabilityViewer.module.scss'
 import Skeleton from '../AvailabilityViewer/components/Skeleton/Skeleton'
 
@@ -58,6 +59,16 @@ const AvailabilityEditor = ({ eventId, times, timezone, value = [], onChange, ta
       score: MAXSCORE - getScoreForTime(t, value), // invert all scores
     }))
   ), [onChange, times, value])
+
+  // Let a browser extension clear times that conflict with the user's calendar
+  const isSpecificDates = times[0]?.length === 13
+  useCalendarBridge({
+    timezone,
+    timeStart: isSpecificDates ? parseSpecificDate(times[0]) : undefined,
+    timeEnd: isSpecificDates ? parseSpecificDate(times[times.length - 1]).add({ minutes: 15 }) : undefined,
+    preferences: value,
+    onImport: onChange,
+  })
 
   // Selection keyboard shortcuts
   useEffect(() => {
