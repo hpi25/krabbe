@@ -1,0 +1,21 @@
+<?xml version='1.0' encoding='utf-8'?>
+<multistatus xmlns="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav" xmlns:ICAL="http://apple.com/ns/ical/" xmlns:CS="http://calendarserver.org/ns/">
+ <response>
+  <href>/alice/</href>
+  <propstat>
+   <prop><resourcetype><collection /></resourcetype></prop>
+   <status>HTTP/1.1 200 OK</status>
+  </propstat>
+ </response>
+ <response>
+  <href>/alice/work/</href>
+  <propstat>
+   <prop>
+    <resourcetype><collection /><C:calendar /></resourcetype>
+    <displayname>Work</displayname>
+    <C:supported-calendar-component-set><C:comp name="VEVENT" /></C:supported-calendar-component-set>
+   </prop>
+   <status>HTTP/1.1 200 OK</status>
+  </propstat>
+ </response>
+</multistatus>
