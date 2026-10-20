@@ -12,19 +12,10 @@ Star Fit is a fork of [Crab Fit](https://github.com/GRA0007/crab.fit) that suppo
 
 If you find any bugs or have a feature request, please [create an issue](https://github.com/hpi25/krabbe/issues/new/choose).
 
-### 🌐 Translations
-
-https://explore.transifex.com/star-fit/star-fit/
-
-If you speak a language other than English and you want to help translate Star Fit, visit Transifex using the link above and click "Join this project".
-
-For more information on how to translate, visit the [translating wiki page](./wiki/Translating.md).
-
----
 
 ### Self-hosting
 
-Star Fit is fully open-source, and you can get your own version running by following the [self-hosting guide](./wiki/Self%E2%80%90hosting.md).
+Star Fit is fully open-source, and you can get your own version running by following the [self-hosting guide](./DEPLOYMENT.md).
 
 ### Contributing
 
