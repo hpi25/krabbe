@@ -41,9 +41,38 @@ For code-specific documentation, please see the README files in the repo.
 
 ### Browser Extension
 
-The Star Fit browser extension is currently an iFrame that points to `/create` on the frontend. To test, edit the `popup.html` file's iframe src to be `http://localhost:1234/create`, then view that in your browser.
+The browser extension lives in `browser-extension/` and is a TypeScript Manifest V3 Firefox extension. It needs Node 26 and Yarn 4 (pinned via `packageManager`), so enable corepack first:
 
-Note that you can't just visit the url directly, as it will redirect to the full create form if not running within an iFrame.
+```sh
+cd browser-extension
+corepack enable
+yarn install
+yarn build
+```
+
+`yarn build` writes the extension to `browser-extension/dist/firefox`.
+
+To load it into Firefox:
+
+1. Open `about:debugging`, then go to **This Firefox**.
+2. Click **Load Temporary Add-on...** and select `browser-extension/dist/firefox/manifest.json`.
+3. Open the extension's settings tab and set the krabbe URL to `http://localhost:1234`.
+4. Add a CalDAV test account. A local [Radicale](https://radicale.org/) server works well:
+
+   ```sh
+   docker run -p 5232:5232 tomsquest/docker-radicale
+   ```
+
+   Then point the account at `http://localhost:5232`.
+
+After rebuilding, click **Reload** on the extension in `about:debugging` to pick up the changes.
+
+Checks that CI also runs:
+
+```sh
+yarn typecheck
+yarn test
+```
 
 ## Pull Requests
 

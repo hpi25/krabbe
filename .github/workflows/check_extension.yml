@@ -1,0 +1,38 @@
+name: Extension Checks
+
+on:
+  pull_request:
+    paths:
+      - browser-extension/**
+      - .github/workflows/check_extension.yml
+  push:
+    branches:
+      - main
+    paths:
+      - browser-extension/**
+      - .github/workflows/check_extension.yml
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: browser-extension
+
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 26
+      # Corepack is no longer bundled with Node.js, and must be enabled before setup-node can cache yarn
+      - run: npm install --global corepack && corepack enable
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 26
+          cache: 'yarn'
+          cache-dependency-path: browser-extension/yarn.lock
+      - run: yarn install --immutable
+      - run: yarn typecheck
+      - run: yarn test
+      - run: yarn build
