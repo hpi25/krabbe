@@ -146,7 +146,10 @@ From each returned VCALENDAR, for each VEVENT:
 - Wrong credentials (401) / unreachable server: shown in settings on add, and
   per calendar in the picker on fetch.
 - Server that ignores `<C:expand>`: recurring events only count on their first
-  occurrence. Documented limitation (Nextcloud, Radicale and iCloud support it).
+  occurrence. Documented limitation (Nextcloud and Radicale support it).
+- Calendars hosted on a different origin than the configured server URL (e.g.
+  iCloud) are not supported: the client refuses any URL on another origin so
+  credentials are only ever sent to the server the user entered.
 
 ## Testing
 

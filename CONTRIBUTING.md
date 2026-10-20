@@ -57,21 +57,35 @@ To load it into Firefox:
 1. Open `about:debugging`, then go to **This Firefox**.
 2. Click **Load Temporary Add-on...** and select `browser-extension/dist/firefox/manifest.json`.
 3. Open the extension's settings tab and set the krabbe URL to `http://localhost:1234`.
-4. Add a CalDAV test account. A local [Radicale](https://radicale.org/) server works well:
+4. Add a CalDAV test account. A local [Radicale](https://radicale.org/) server works well. For local testing, run it with authentication disabled (any username and password is accepted, and the username becomes the account). Create a config file `radicale-config` with:
 
-   ```sh
-   docker run -p 5232:5232 tomsquest/docker-radicale
+   ```ini
+   [server]
+   hosts = 0.0.0.0:5232
+
+   [auth]
+   type = none
    ```
 
-   Then point the account at `http://localhost:5232`.
+   and start the container with it mounted:
+
+   ```sh
+   docker run -p 5232:5232 -v "$PWD/radicale-config:/config/config:ro" tomsquest/docker-radicale
+   ```
+
+   Then add an account with server URL `http://localhost:5232` and any username and password, for example `test` / `test`.
+
+   Firefox host permissions include the port, so the permission prompts are for `http://localhost:5232/*` (the CalDAV server) and `http://localhost:1234/*` (krabbe). If you change the port, grant access again in the extension's settings page.
 
 After rebuilding, click **Reload** on the extension in `about:debugging` to pick up the changes.
 
-Checks that CI also runs:
+Checks that CI also runs (from `browser-extension/`):
 
 ```sh
+yarn install --immutable
 yarn typecheck
 yarn test
+yarn build
 ```
 
 ## Pull Requests

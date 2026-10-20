@@ -228,7 +228,7 @@
 - [ ] **Step 4: Manual check** with the frontend dev server (`yarn dev` in `frontend/`) and the API running:
   1. Create a poll with specific dates and open the editor.
   2. Fill all slots with Ctrl+A.
-  3. Remove conflicts with a Radicale calendar that has an event from 9:10 to 9:20. The 9:00 slot is cleared and the other slots stay.
+  3. Remove conflicts with a Radicale calendar that has an event from 9:10 to 9:20. The 9:00 and 9:15 slots are both cleared (15-minute slots, and the event overlaps both) and the other slots stay.
   4. Open a weekly poll. No button appears there.
 - [ ] **Step 5:** Commit.
 
