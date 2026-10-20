@@ -22,10 +22,10 @@ interface SettingsStore {
 
 const useSettingsStore = create<SettingsStore>()(persist(
   set => ({
-    weekStart: 0,
-    timeFormat: '12h',
+    weekStart: 1,
+    timeFormat: '24h',
     theme: 'System',
-    highlight: false,
+    highlight: true,
     colormap: 'crabfit',
 
     setWeekStart: weekStart => set({ weekStart }),
