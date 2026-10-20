@@ -6,13 +6,13 @@
 
 **Architecture:** TypeScript sources in `browser-extension/src/`, bundled by esbuild per browser target. A service-worker-safe background script does all CalDAV traffic; a runtime-registered content script on the configured krabbe origin mounts a shadow-DOM picker into `[data-calendar-bridge]` and talks to the page over the `calendar-bridge:*` postMessage protocol (already implemented in `frontend/src/components/AvailabilityEditor/useCalendarBridge.ts`).
 
-**Tech Stack:** Node 26, Yarn berry 4, TypeScript 5, esbuild, fast-xml-parser, `@types/webextension-polyfill` (types only), `node --test`.
+**Tech Stack:** Node 26, Yarn berry 4, TypeScript 6, esbuild, fast-xml-parser, `@types/webextension-polyfill` (types only), `node --test`.
 
 **Spec:** `docs/superpowers/specs/2026-10-20-caldav-extension-design.md`
 
 ## Global Constraints
 
-- No bun anywhere (scripts, lockfiles, docs). Node 26 + Yarn berry; `browser-extension/package.json` has `"packageManager": "yarn@4.5.3"` and `.yarnrc.yml` with `nodeLinker: node-modules`.
+- No bun anywhere (scripts, lockfiles, docs). Node 26 + Yarn berry; `browser-extension/package.json` has `"packageManager": "yarn@4.14.1"` and `.yarnrc.yml` with `nodeLinker: node-modules`.
 - Only `src/platform.ts` references `browser`/`chrome`; everything else imports `ext` from it.
 - Background code (`src/background/**`, `src/calendar/**`) must not use `window`, `document` or `DOMParser`.
 - Default krabbe URL: `https://krabbe.hpi.church`. Gecko id: `krabbe-calendar@hpi.church`, `strict_min_version: "128.0"`. Extension name: `Krabbe`, version `2.0.0`.
