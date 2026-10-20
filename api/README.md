@@ -4,7 +4,7 @@ This is the API for Star Fit, written in Rust. It uses the [axum](https://crates
 
 ## API docs
 
-OpenAPI compatible API docs are generated using [utoipa](https://crates.io/crates/utoipa). You can visit them at [https://api.starbestfit.com/docs](https://api.starbestfit.com/docs).
+OpenAPI compatible API docs are generated using [utoipa](https://crates.io/crates/utoipa). You can visit them at [https://krabbe.hpi.church/api/docs](https://krabbe.hpi.church/api/docs).
 
 ## Storage adaptors
 
