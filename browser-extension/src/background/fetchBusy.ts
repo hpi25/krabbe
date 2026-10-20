@@ -11,6 +11,8 @@ export interface FetchBusyDeps {
 
 const MAX_RANGE_MS = 366 * 24 * 60 * 60 * 1000;
 
+const countEvents = (ics: string) => ics.match(/^BEGIN:VEVENT\r?$/gm)?.length ?? 0;
+
 function messageOf(err: unknown): string {
   if (err instanceof CalDavError && err.status === 401) return 'Authentication failed (HTTP 401)';
   return err instanceof Error ? err.message : String(err);
@@ -25,16 +27,19 @@ export async function fetchBusy(
   const end = new Date(req.timeEnd);
   const span = end.getTime() - start.getTime();
   if (!Number.isFinite(span) || span <= 0 || span > MAX_RANGE_MS) {
-    return { busy: [], errors: [{ calendarUrl: '', message: 'Invalid time range' }] };
+    return { busy: [], errors: [{ calendarUrl: '', message: 'Invalid time range' }], stats: [] };
   }
-  const jobs: { url: string; run: Promise<BusyInterval[]> }[] = [];
+  const jobs: { url: string; run: Promise<{ intervals: BusyInterval[]; events: number }> }[] = [];
   for (const url of req.calendarUrls) {
     for (const account of settings.accounts) {
       const cal = account.calendars.find((c) => c.url === url);
       if (!cal) continue;
       const run = deps
         .fetchCalendarData(account, url, start, end)
-        .then((list) => list.flatMap((ics) => deps.extractBusy(ics, { countAllDay: cal.countAllDay, timezone: req.timezone })));
+        .then((list) => ({
+          intervals: list.flatMap((ics) => deps.extractBusy(ics, { countAllDay: cal.countAllDay, timezone: req.timezone })),
+          events: list.reduce((n, ics) => n + countEvents(ics), 0),
+        }));
       jobs.push({ url, run });
       break;
     }
@@ -42,9 +47,15 @@ export async function fetchBusy(
   const results = await Promise.allSettled(jobs.map((j) => j.run));
   const busy: BusyInterval[] = [];
   const errors: FetchBusyResponse['errors'] = [];
+  const stats: FetchBusyResponse['stats'] = [];
   results.forEach((r, i) => {
-    if (r.status === 'fulfilled') busy.push(...r.value);
-    else errors.push({ calendarUrl: jobs[i]!.url, message: messageOf(r.reason) });
+    const calendarUrl = jobs[i]!.url;
+    if (r.status === 'fulfilled') {
+      busy.push(...r.value.intervals);
+      stats.push({ calendarUrl, events: r.value.events, intervals: r.value.intervals.length });
+    } else {
+      errors.push({ calendarUrl, message: messageOf(r.reason) });
+    }
   });
-  return { busy, errors };
+  return { busy, errors, stats };
 }

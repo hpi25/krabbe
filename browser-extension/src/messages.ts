@@ -41,7 +41,15 @@ export interface PickerDataResponse {
 }
 
 export type DiscoverResponse = { calendars: Pick<CalendarSettings, 'url' | 'name' | 'color'>[] } | { error: string };
+export interface CalendarStats {
+  calendarUrl: string;
+  /** VEVENTs the server returned for the range (expanded instances count individually). */
+  events: number;
+  /** Busy intervals left after dropping free, cancelled, all-day (unless counted) and zero-length events. */
+  intervals: number;
+}
 export interface FetchBusyResponse {
   busy: BusyInterval[];
   errors: { calendarUrl: string; message: string }[];
+  stats: CalendarStats[];
 }
