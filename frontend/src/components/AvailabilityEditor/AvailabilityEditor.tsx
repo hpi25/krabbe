@@ -19,7 +19,7 @@ import viewerStyles from '../AvailabilityViewer/AvailabilityViewer.module.scss'
 import Skeleton from '../AvailabilityViewer/components/Skeleton/Skeleton'
 
 /** Where to get the calendar extension until it's in the browser stores */
-const EXTENSION_URL = 'https://github.com/hpi25/krabbe'
+const EXTENSION_URL = 'https://github.com/hpi25/krabbe/releases/tag/browser-extension'
 
 interface AvailabilityEditorProps {
   eventId?: string
