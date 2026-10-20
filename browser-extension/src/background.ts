@@ -11,12 +11,15 @@ const routerDeps = {
   fetchBusy,
   discoverCalendars,
   openOptionsPage: () => ext.runtime.openOptionsPage(),
+  get extensionBaseUrl() {
+    return ext.runtime.getURL('');
+  },
 };
 
 type Listener = Parameters<typeof ext.runtime.onMessage.addListener>[0];
 
 // Typings only allow a `true` return; returning false for unhandled messages is valid at runtime.
-const onMessage = ((raw: unknown, sender: { tab?: unknown }, sendResponse: (r?: unknown) => void) =>
+const onMessage = ((raw: unknown, sender: { tab?: unknown; url?: string }, sendResponse: (r?: unknown) => void) =>
   routeMessage(raw as Message, sender, sendResponse, routerDeps)) as unknown as Listener;
 ext.runtime.onMessage.addListener(onMessage);
 

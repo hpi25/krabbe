@@ -8,9 +8,11 @@ export interface RouterDeps {
   fetchBusy: typeof fetchBusy;
   discoverCalendars: typeof discoverCalendars;
   openOptionsPage: () => Promise<void> | void;
+  /** e.g. `moz-extension://<uuid>/`; senders whose url starts with it are extension pages. */
+  extensionBaseUrl: string;
 }
 
-const defaultDeps: RouterDeps = { getSettings, fetchBusy, discoverCalendars, openOptionsPage: () => undefined };
+const defaultDeps: RouterDeps = { getSettings, fetchBusy, discoverCalendars, openOptionsPage: () => undefined, extensionBaseUrl: '' };
 
 function errMsg(e: unknown): string {
   return e instanceof Error ? e.message : String(e);
@@ -19,13 +21,13 @@ function errMsg(e: unknown): string {
 /** Returns true if `reply` will be called asynchronously; false/undefined otherwise. */
 export function routeMessage(
   msg: Message | undefined,
-  sender: { tab?: unknown },
+  sender: { tab?: unknown; url?: string },
   reply: (r?: unknown) => void,
   deps: RouterDeps = defaultDeps,
 ): boolean {
   switch (msg?.type) {
     case 'discover': {
-      if (sender.tab !== undefined) {
+      if (!deps.extensionBaseUrl || !sender.url?.startsWith(deps.extensionBaseUrl)) {
         reply({ error: 'discover is only available from the settings page' } satisfies DiscoverResponse);
         return true;
       }
@@ -36,8 +38,8 @@ export function routeMessage(
       return true;
     }
     case 'fetch-busy':
-      deps
-        .getSettings()
+      Promise.resolve()
+        .then(() => deps.getSettings())
         .then((s) => deps.fetchBusy(s, msg))
         .catch((e): FetchBusyResponse => ({ busy: [], errors: [{ calendarUrl: '', message: errMsg(e) }] }))
         .then(reply);
