@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Temporal } from '@js-temporal/polyfill'
 import { z } from 'zod'
 
@@ -22,6 +22,8 @@ import { removeBusyTimes } from '/src/utils/removeBusyTimes'
  *    `start`/`end` are ISO 8601 strings or epoch milliseconds.
  * 4. page -> extension `{ source: 'krabbe', type: 'calendar-bridge:applied', removed }`
  *    Number of scored times that were cleared.
+ * 5. extension -> page `{ source: 'krabbe-extension', type: 'calendar-bridge:mounted' }`
+ *    The extension's picker is on the page, so the page hides its install fallback.
  */
 
 const instant = z.union([z.number(), z.string()])
@@ -32,6 +34,10 @@ const IncomingMessage = z.discriminatedUnion('type', [
   z.object({
     source: z.literal('krabbe-extension'),
     type: z.literal('calendar-bridge:ping'),
+  }),
+  z.object({
+    source: z.literal('krabbe-extension'),
+    type: z.literal('calendar-bridge:mounted'),
   }),
   z.object({
     source: z.literal('krabbe-extension'),
@@ -48,9 +54,13 @@ interface UseCalendarBridgeProps {
   onImport: (availability: TimeScore[]) => void
 }
 
-/** Only active when `timeStart`/`timeEnd` are given, i.e. for specific date events */
+/**
+ * Only active when `timeStart`/`timeEnd` are given, i.e. for specific date events.
+ * Returns whether the extension has made itself known on this page.
+ */
 export const useCalendarBridge = ({ timezone, timeStart, timeEnd, preferences, onImport }: UseCalendarBridgeProps) => {
   // Keep latest values for the message listener without re-subscribing on every change
+  const [hasExtension, setHasExtension] = useState(false)
   const latest = useRef({ preferences, onImport })
   latest.current = { preferences, onImport }
 
@@ -69,6 +79,8 @@ export const useCalendarBridge = ({ timezone, timeStart, timeEnd, preferences, o
       const parsed = IncomingMessage.safeParse(e.data)
       if (!parsed.success) return
 
+      setHasExtension(true)
+      if (parsed.data.type === 'calendar-bridge:mounted') return
       if (parsed.data.type === 'calendar-bridge:ping') return announce()
 
       const { preferences, onImport } = latest.current
@@ -81,4 +93,6 @@ export const useCalendarBridge = ({ timezone, timeStart, timeEnd, preferences, o
     announce()
     return () => window.removeEventListener('message', handleMessage)
   }, [start, end, timezone])
+
+  return hasExtension
 }

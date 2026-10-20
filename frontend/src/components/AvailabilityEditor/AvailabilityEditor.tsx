@@ -18,6 +18,9 @@ import { useCalendarBridge } from './useCalendarBridge'
 import viewerStyles from '../AvailabilityViewer/AvailabilityViewer.module.scss'
 import Skeleton from '../AvailabilityViewer/components/Skeleton/Skeleton'
 
+/** Where to get the calendar extension until it's in the browser stores */
+const EXTENSION_URL = 'https://github.com/hpi25/krabbe'
+
 interface AvailabilityEditorProps {
   eventId?: string
   times: string[]
@@ -75,7 +78,7 @@ const AvailabilityEditor = ({ eventId, times, timezone, value = [], onChange, ta
     }
     return { timeStart: min, timeEnd: max.add({ minutes: 15 }) }
   }, [isSpecificDates, times])
-  useCalendarBridge({
+  const hasCalendarExtension = useCalendarBridge({
     timezone,
     timeStart,
     timeEnd,
@@ -125,7 +128,14 @@ const AvailabilityEditor = ({ eventId, times, timezone, value = [], onChange, ta
           preferences={value}
           onImport={onChange}
         />
-        <div data-calendar-bridge />
+        <div data-calendar-bridge>
+          {!hasCalendarExtension && <Button
+            href={EXTENSION_URL}
+            target="_blank"
+            rel="noreferrer noopener"
+            title={t('you.calendar_conflicts_install')}
+          >{t('you.calendar_conflicts')}</Button>}
+        </div>
       </div>
     </Content>}
     <Content>

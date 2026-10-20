@@ -12,6 +12,8 @@ function tryMount(): void {
     if (mounted.has(anchor)) continue;
     mounted.add(anchor);
     mountPicker(anchor, () => ready as ReadyInfo);
+    // Lets the page hide its "get the extension" fallback.
+    window.postMessage({ source: 'krabbe-extension', type: 'calendar-bridge:mounted' }, window.location.origin);
   }
 }
 

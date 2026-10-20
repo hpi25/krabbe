@@ -36,8 +36,8 @@ const base = {
   locale: 'en-GB',
 };
 
-test('summarize lists the searched range, per-calendar counts, totals and removed slots', () => {
-  const text = summarize({
+test('summarize reports the searched range, per-calendar counts, totals and removed slots', () => {
+  const s = summarize({
     ...base,
     stats: [
       { name: 'Work', events: 3, intervals: 2 },
@@ -46,22 +46,34 @@ test('summarize lists the searched range, per-calendar counts, totals and remove
     errors: [],
     removed: 2,
   });
-  assert.deepEqual(text.split('\n'), [
-    'Searched 20 Oct 2026, 09:00 – 22 Oct 2026, 20:00',
-    'Work: 3 events → 2 busy',
-    'Home: 1 event → 0 busy',
-    'Total: 4 events, 2 busy intervals',
-    'Removed 2 slots',
-  ]);
+  assert.deepEqual(s, {
+    headline: 'Removed 2 slots',
+    range: '20 Oct 2026, 09:00 – 22 Oct 2026, 20:00',
+    calendars: [
+      { name: 'Work', events: 3, intervals: 2 },
+      { name: 'Home', events: 1, intervals: 0 },
+    ],
+    total: { events: 4, intervals: 2 },
+    hint: undefined,
+    errors: [],
+  });
 });
 
 test('summarize explains zero removals when busy intervals were found', () => {
-  const lines = summarize({ ...base, stats: [{ name: 'Work', events: 1, intervals: 1 }], errors: [], removed: 0 }).split('\n');
-  assert.equal(lines.at(-2), 'Removed 0 slots');
-  assert.equal(lines.at(-1), 'Only slots you have already filled in are cleared.');
+  const s = summarize({ ...base, stats: [{ name: 'Work', events: 1, intervals: 1 }], errors: [], removed: 0 });
+  assert.equal(s.headline, 'Removed 0 slots');
+  assert.equal(s.hint, 'Only slots you have already filled in are cleared.');
 });
 
-test('summarize reports an unconfirmed page and appends errors', () => {
-  const lines = summarize({ ...base, stats: [], errors: ['Work: boom'], removed: null }).split('\n');
-  assert.deepEqual(lines.slice(1), ['Total: 0 events, 0 busy intervals', "Page didn't confirm", 'Work: boom']);
+test('summarize singularises one slot and gives no hint when nothing was busy', () => {
+  const s = summarize({ ...base, stats: [{ name: 'Work', events: 0, intervals: 0 }], errors: [], removed: 1 });
+  assert.equal(s.headline, 'Removed 1 slot');
+  assert.equal(s.hint, undefined);
+});
+
+test('summarize reports an unconfirmed page and passes errors through', () => {
+  const s = summarize({ ...base, stats: [], errors: ['Work: boom'], removed: null });
+  assert.equal(s.headline, "Page didn't confirm");
+  assert.deepEqual(s.total, { events: 0, intervals: 0 });
+  assert.deepEqual(s.errors, ['Work: boom']);
 });

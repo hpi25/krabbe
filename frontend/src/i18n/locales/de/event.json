@@ -69,6 +69,8 @@
     "google_cal": "Mit Google Kalender synchronisieren",
     "outlook_cal": "Mit Outlook Kalender synchronisieren",
     "recent_event": "Mit einer kürzlichen Veranstaltung synchronisieren",
+    "calendar_conflicts": "Kalenderkonflikte entfernen",
+    "calendar_conflicts_install": "Benötigt die Krabbe-Browsererweiterung",
     "integration": {
       "logout": "ausloggen",
       "close": "schließen",

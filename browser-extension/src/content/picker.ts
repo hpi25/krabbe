@@ -7,7 +7,7 @@ import type {
   PickerDataResponse,
   SaveSelectionRequest,
 } from '../messages.ts';
-import { parseApplied, summarize, type ReadyInfo } from './bridge.ts';
+import { parseApplied, summarize, type ReadyInfo, type Summary } from './bridge.ts';
 import css from './picker.css';
 
 const APPLIED_TIMEOUT_MS = 5000;
@@ -22,6 +22,32 @@ function el<K extends keyof HTMLElementTagNameMap>(tag: K, className?: string, t
 function openOptions(): void {
   const msg: OpenOptionsRequest = { type: 'open-options' };
   void ext.runtime.sendMessage(msg);
+}
+
+function renderSummary(s: Summary): HTMLElement {
+  const out = el('div');
+  out.append(el('p', 'headline', s.headline));
+  const row = (cells: string[], tag: 'th' | 'td' = 'td') => {
+    const tr = el('tr');
+    for (const c of cells) tr.append(el(tag, undefined, c));
+    return tr;
+  };
+  const thead = el('thead');
+  thead.append(row(['Calendar', 'Events', 'Busy'], 'th'));
+  const tbody = el('tbody');
+  for (const c of s.calendars) tbody.append(row([c.name, String(c.events), String(c.intervals)]));
+  const tfoot = el('tfoot');
+  tfoot.append(row(['Total', String(s.total.events), String(s.total.intervals)]));
+  const table = el('table');
+  table.append(thead, tbody, tfoot);
+  out.append(table, el('p', 'muted', `Searched ${s.range}`));
+  if (s.hint) out.append(el('p', 'hint', s.hint));
+  if (s.errors.length > 0) {
+    const list = el('ul', 'errors');
+    for (const e of s.errors) list.append(el('li', undefined, e));
+    out.append(list);
+  }
+  return out;
 }
 
 function waitForApplied(): Promise<number | null> {
@@ -49,7 +75,7 @@ export function mountPicker(anchor: HTMLElement, getReady: () => ReadyInfo): voi
   const style = el('style');
   style.textContent = css;
   const root = el('div', 'root');
-  const toggle = el('button', undefined, 'Remove calendar conflicts');
+  const toggle = el('button', 'btn', 'Remove calendar conflicts');
   toggle.type = 'button';
   const panel = el('div', 'panel');
   panel.hidden = true;
@@ -77,9 +103,9 @@ export function mountPicker(anchor: HTMLElement, getReady: () => ReadyInfo): voi
         const input = el('input');
         input.type = 'checkbox';
         input.checked = cal.checked;
-        const dot = el('span', 'dot');
-        if (cal.color && /^#[0-9a-fA-F]{3,8}$/.test(cal.color)) dot.style.background = cal.color;
-        label.append(input, dot, el('span', undefined, cal.name));
+        // Like the site's Google import: the checkbox takes the calendar's colour.
+        if (cal.color && /^#[0-9a-fA-F]{3,8}$/.test(cal.color)) input.style.accentColor = cal.color;
+        label.append(input, el('span', undefined, cal.name));
         inputs.push({ url: cal.url, input });
         g.append(label);
       }
@@ -87,17 +113,17 @@ export function mountPicker(anchor: HTMLElement, getReady: () => ReadyInfo): voi
     }
     const status = el('div', 'status');
     status.setAttribute('role', 'status');
-    const run = el('button', 'primary', 'Remove conflicts');
+    const run = el('button', 'btn small', 'Remove conflicts');
     run.type = 'button';
-    const settingsLink = el('button', 'link', 'Settings');
+    const settingsLink = el('button', 'link', 'Extension settings');
     settingsLink.type = 'button';
     settingsLink.addEventListener('click', openOptions);
     const actions = el('div', 'actions');
     actions.append(run, settingsLink);
     panel.append(actions, status);
 
-    const setStatus = (text: string, isError = false) => {
-      status.textContent = text;
+    const setStatus = (content: string | HTMLElement, isError = false) => {
+      status.replaceChildren(content);
       status.classList.toggle('error', isError);
     };
 
@@ -105,6 +131,7 @@ export function mountPicker(anchor: HTMLElement, getReady: () => ReadyInfo): voi
       if (busy) return;
       busy = true;
       run.disabled = true;
+      run.classList.add('loading');
       try {
         const calendarUrls = inputs.filter((i) => i.input.checked).map((i) => i.url);
         if (calendarUrls.length === 0) {
@@ -131,13 +158,13 @@ export function mountPicker(anchor: HTMLElement, getReady: () => ReadyInfo): voi
         const removed = await applied;
         const errors = (res.errors ?? []).map((er) => `${known.get(er.calendarUrl) ?? 'Calendar'}: ${er.message}`);
         const stats = (res.stats ?? []).map((st) => ({ ...st, name: known.get(st.calendarUrl) ?? 'Calendar' }));
-        setStatus(summarize({ timeStart, timeEnd, timezone, stats, errors, removed }), errors.length > 0);
-        status.style.whiteSpace = 'pre-line';
+        setStatus(renderSummary(summarize({ timeStart, timeEnd, timezone, stats, errors, removed })));
       } catch (err) {
         setStatus(err instanceof Error ? err.message : 'Something went wrong', true);
       } finally {
         busy = false;
         run.disabled = false;
+        run.classList.remove('loading');
       }
     });
   }
