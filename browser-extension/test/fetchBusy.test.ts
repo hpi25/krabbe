@@ -67,3 +67,28 @@ test('401 reports authentication failure', async () => {
   });
   assert.match(res.errors[0]!.message, /authentication failed/i);
 });
+
+test('rejects invalid, inverted and oversized ranges without fetching', async () => {
+  const bad = [
+    { timeStart: 'nope', timeEnd: '2026-01-02T00:00:00Z' },
+    { timeStart: '2026-01-02T00:00:00Z', timeEnd: '2026-01-01T00:00:00Z' },
+    { timeStart: '2026-01-01T00:00:00Z', timeEnd: '2026-01-01T00:00:00Z' },
+    { timeStart: '2026-01-01T00:00:00Z', timeEnd: '2027-06-01T00:00:00Z' },
+  ];
+  for (const range of bad) {
+    let called = false;
+    const res = await fetchBusy(
+      settings,
+      { ...req, ...range, calendarUrls: ['https://dav.example/c1/'] },
+      {
+        fetchCalendarData: async () => {
+          called = true;
+          return [];
+        },
+        extractBusy: () => [],
+      },
+    );
+    assert.deepEqual(res, { busy: [], errors: [{ calendarUrl: '', message: 'Invalid time range' }] });
+    assert.equal(called, false);
+  }
+});

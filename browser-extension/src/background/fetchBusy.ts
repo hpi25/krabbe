@@ -9,6 +9,8 @@ export interface FetchBusyDeps {
   extractBusy: typeof extractBusy;
 }
 
+const MAX_RANGE_MS = 366 * 24 * 60 * 60 * 1000;
+
 function messageOf(err: unknown): string {
   if (err instanceof CalDavError && err.status === 401) return 'Authentication failed (HTTP 401)';
   return err instanceof Error ? err.message : String(err);
@@ -21,6 +23,10 @@ export async function fetchBusy(
 ): Promise<FetchBusyResponse> {
   const start = new Date(req.timeStart);
   const end = new Date(req.timeEnd);
+  const span = end.getTime() - start.getTime();
+  if (!Number.isFinite(span) || span <= 0 || span > MAX_RANGE_MS) {
+    return { busy: [], errors: [{ calendarUrl: '', message: 'Invalid time range' }] };
+  }
   const jobs: { url: string; run: Promise<BusyInterval[]> }[] = [];
   for (const url of req.calendarUrls) {
     for (const account of settings.accounts) {
