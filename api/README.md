@@ -12,7 +12,6 @@ OpenAPI compatible API docs are generated using [utoipa](https://crates.io/crate
 | ------- | ---------- |
 | `memory-adaptor` | Stores data in memory |
 | `sql-adaptor` | Postgres, MySQL, SQLite |
-| `datastore-adaptor` | Google Datastore |
 
 To choose an adaptor, specify it in the `features` when compiling, e.g. `cargo run --features sql-adaptor`.
 

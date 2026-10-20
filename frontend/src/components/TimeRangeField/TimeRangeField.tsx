@@ -30,7 +30,6 @@ const TimeRangeField = <TValues extends FieldValues>({
 }: TimeRangeFieldProps<TValues>) => {
   const { field: { value, onChange } } = !staticValue
     ? useController(props)
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
     : { field: { value: staticValue, onChange: () => {} } }
 
   if (!('start' in value) || !('end' in value)) return null

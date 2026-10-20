@@ -1,16 +1,16 @@
 use axum::{
+    Json,
     extract::{self, Path},
     http::StatusCode,
-    Json,
 };
 use common::{Adaptor, Event};
-use rand::{seq::SliceRandom, thread_rng, Rng};
-use regex::Regex;
+use rand::{RngExt, seq::IndexedRandom};
 
 use crate::{
+    State,
     errors::ApiError,
     payloads::{ApiResult, EventInput, EventResponse},
-    State,
+    punycode,
 };
 
 #[utoipa::path(
@@ -114,8 +114,8 @@ fn generate_name() -> String {
 
     format!(
         "{} {} Star",
-        adjectives.choose(&mut thread_rng()).unwrap(),
-        crabs.choose(&mut thread_rng()).unwrap()
+        adjectives.choose(&mut rand::rng()).unwrap(),
+        crabs.choose(&mut rand::rng()).unwrap()
     )
 }
 
@@ -125,16 +125,60 @@ fn generate_id(name: &str) -> String {
     if id.replace('-', "").is_empty() {
         id = encode_name(generate_name());
     }
-    let number = thread_rng().gen_range(100000..=999999);
+    let number = rand::rng().random_range(100000..=999999);
     format!("{}-{}", id, number)
 }
 
 // Use punycode to encode the name
 fn encode_name(name: String) -> String {
     let pc = punycode::encode(&name.trim().to_lowercase())
-        .unwrap_or(String::from(""))
+        .unwrap_or_default()
         .trim()
         .replace(|c: char| !c.is_ascii_alphanumeric() && c != ' ', "");
-    let re = Regex::new(r"\s+").unwrap();
-    re.replace_all(&pc, "-").to_string()
+
+    // Collapse each run of spaces into a single hyphen
+    let mut slug = String::with_capacity(pc.len());
+    for c in pc.chars() {
+        if c != ' ' {
+            slug.push(c);
+        } else if !slug.ends_with('-') {
+            slug.push('-');
+        }
+    }
+    slug
+}
+
+#[cfg(test)]
+mod tests {
+    use super::encode_name;
+
+    #[test]
+    fn encodes_names_into_slugs() {
+        // Outputs of the previous punycode + regex implementation
+        let cases = [
+            ("Hello World", "hello-world"),
+            ("  Team   Meeting  ", "team-meeting"),
+            ("Café Crème", "caf-crme60ag"),
+            ("Über straße", "ber-straen1a42a"),
+            ("日本語のイベント", "u9jxfmevcwg6105ao4bc84j"),
+            ("🦀 Crab Party 🦀", "crab-party-k758kma"),
+            ("", ""),
+            ("   ", ""),
+            ("ñ", "ida"),
+            ("Ünïcödé Ståř Fït", "ncd-st-ftb3a4b7dj3g3d91f"),
+            ("Ｆｕｌｌｗｉｄｔｈ", "pi7cdhcoa2ddu"),
+            ("a-b_c.d", "abcd"),
+            ("Мероприятие", "e1aaiarnhgcv6l"),
+            ("x\ty\nz", "xyz"),
+            ("MiXeD CaSe 123", "mixed-case-123"),
+            ("ελληνικά", "hxargifdar"),
+        ];
+        for (input, expected) in cases {
+            assert_eq!(
+                encode_name(input.to_string()),
+                expected,
+                "encoding {input:?}"
+            );
+        }
+    }
 }

@@ -1,4 +1,4 @@
-import { InitOptions } from 'i18next'
+import { BackendModule, InitOptions } from 'i18next'
 
 export const fallbackLng = 'en'
 export const defaultNS = 'common'
@@ -20,6 +20,20 @@ export const getOptions = (lng = fallbackLng, ns: InitOptions['ns'] = defaultNS)
     escapeValue: false,
   },
 })
+
+/** Lazily loads translation files from ./locales, only for known languages and namespaces */
+export const localesBackend: BackendModule = {
+  type: 'backend',
+  init: () => {},
+  read: (language, namespace, callback) => {
+    if (!(languages as readonly string[]).includes(language) || !/^[a-z-]+$/.test(namespace)) {
+      return callback(new Error(`Unsupported language or namespace: ${language}/${namespace}`), false)
+    }
+    import(`./locales/${language}/${namespace}.json`)
+      .then(data => callback(null, data.default ?? data))
+      .catch(err => callback(err, false))
+  },
+}
 
 interface LanguageDetails {
   /** Name of the language in it's own language */

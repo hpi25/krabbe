@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { SubmitHandler, useForm } from 'react-hook-form'
 import { useRouter } from 'next/navigation'
-import { range } from '@giraugh/tools'
 import { Temporal } from '@js-temporal/polyfill'
 
 import Button from '/src/components/Button/Button'
@@ -16,6 +15,7 @@ import { createEvent, EventResponse } from '/src/config/api'
 import { useTranslation } from '/src/i18n/client'
 import timezones from '/src/res/timezones.json'
 import useRecentsStore from '/src/stores/recentsStore'
+import { range } from '/src/utils'
 
 import EventInfo from './components/EventInfo/EventInfo'
 import styles from './CreateForm.module.scss'

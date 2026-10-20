@@ -1,7 +1,6 @@
 import { Trans } from 'react-i18next/TransWithoutContext'
 import { Metadata } from 'next'
 import Link from 'next/link'
-import { range, rotateArray } from '@giraugh/tools'
 
 import AvailabilityViewer from '/src/components/AvailabilityViewer/AvailabilityViewer'
 import Button from '/src/components/Button/Button'
@@ -14,7 +13,7 @@ import TimeRangeField from '/src/components/TimeRangeField/TimeRangeField'
 import Video from '/src/components/Video/Video'
 import { deserializePersonResponse } from '/src/config/api'
 import { useTranslation } from '/src/i18n/server'
-import { calculateTable, getWeekdayNames } from '/src/utils'
+import { calculateTable, getWeekdayNames, range, rotateArray } from '/src/utils'
 
 import styles from './page.module.scss'
 

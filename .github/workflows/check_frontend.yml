@@ -23,12 +23,17 @@ jobs:
         working-directory: frontend
 
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
-          node-version: 18
+          node-version-file: frontend/.nvmrc
+      # Corepack is no longer bundled with Node.js, and must be enabled before setup-node can cache yarn
+      - run: npm install --global corepack && corepack enable
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: frontend/.nvmrc
           cache: 'yarn'
-          cache-dependency-path: '**/yarn.lock'
+          cache-dependency-path: frontend/yarn.lock
       - run: yarn install --immutable
       - run: yarn lint --max-warnings 0
 
@@ -40,11 +45,16 @@ jobs:
         working-directory: frontend
 
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
-          node-version: 18
+          node-version-file: frontend/.nvmrc
+      # Corepack is no longer bundled with Node.js, and must be enabled before setup-node can cache yarn
+      - run: npm install --global corepack && corepack enable
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: frontend/.nvmrc
           cache: 'yarn'
-          cache-dependency-path: '**/yarn.lock'
+          cache-dependency-path: frontend/yarn.lock
       - run: yarn install --immutable
       - run: yarn tsc

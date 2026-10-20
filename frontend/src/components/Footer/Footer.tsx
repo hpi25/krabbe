@@ -12,7 +12,7 @@ interface FooterProps {
 
 const Footer = async ({ isSmall }: FooterProps) => {
   const { t } = await useTranslation('common')
-  const isRunningInApp = headers().get('referer')?.includes('android-app://fit.crab')
+  const isRunningInApp = (await headers()).get('referer')?.includes('android-app://fit.crab')
   const hideFooter = true
 
   return isRunningInApp || hideFooter

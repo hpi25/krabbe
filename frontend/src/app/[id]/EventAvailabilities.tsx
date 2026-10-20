@@ -41,7 +41,7 @@ const EventAvailabilities = ({ event }: EventAvailabilitiesProps) => {
   const [timezone, setTimezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone)
 
   // Web worker for calculating the heatmap table
-  const tableWorker = useRef<Worker>()
+  const tableWorker = useRef<Worker>(undefined)
 
   // Calculate table (using a web worker if available)
   const [table, setTable] = useState<ReturnType<typeof calculateTable>>()

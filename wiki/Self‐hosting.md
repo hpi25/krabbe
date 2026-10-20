@@ -10,7 +10,7 @@ Before you begin, you'll need to choose where you want to host the frontend, API
 
 The Next.js docs have a great page about [deploying](https://nextjs.org/docs/app/building-your-application/deploying). The easiest method will be using [Vercel](https://vercel.com/docs/concepts/deployments/overview) or [DigitalOcean](https://docs.digitalocean.com/products/app-platform/getting-started/sample-apps/next.js/), however they have listed some alternatives.
 
-You may also use a personal machine, raspberry pi, etc. as long as you have node and yarn installed. Note this may make setting up a domain and SSL certificates more difficult.
+You may also use a personal machine, raspberry pi, etc. as long as you have node (v26 or newer) and yarn (v4, via corepack) installed. Note this may make setting up a domain and SSL certificates more difficult.
 
 ### API
 

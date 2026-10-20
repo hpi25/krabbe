@@ -1,5 +1,6 @@
-import { splitArrayBy } from '@giraugh/tools'
 import { Temporal } from '@js-temporal/polyfill'
+
+import { splitArrayBy } from './array'
 
 /**
  * Calculates the rows required for an availability grid

@@ -1,8 +1,9 @@
 {
   "compilerOptions": {
-    "baseUrl": "./",
     "paths": {
-      "/*": ["./*"]
+      "/*": [
+        "./*"
+      ]
     },
     "lib": [
       "dom",
@@ -16,10 +17,10 @@
     "incremental": true,
     "esModuleInterop": true,
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "strict": true,
     "noImplicitAny": true,
     "target": "ES2022",
@@ -31,13 +32,18 @@
         "name": "typescript-plugin-css-modules"
       }
     ],
-    "types": ["google.accounts", "gapi", "gapi.calendar"]
+    "types": [
+      "google.accounts",
+      "gapi",
+      "gapi.calendar"
+    ]
   },
   "include": [
     "next-env.d.ts",
     ".next/types/**/*.ts",
     "**/*.ts",
-    "**/*.tsx"
+    "**/*.tsx",
+    ".next/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"

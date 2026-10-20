@@ -1,6 +1,7 @@
-import { MapKey } from 'hue-map/dist/maps'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+
+import type { MapKey } from '/src/utils/colormap'
 
 type TimeFormat = '12h' | '24h'
 type Theme = 'System' | 'Light' | 'Dark'
@@ -22,10 +23,10 @@ interface SettingsStore {
 
 const useSettingsStore = create<SettingsStore>()(persist(
   set => ({
-    weekStart: 0,
-    timeFormat: '12h',
+    weekStart: 1,
+    timeFormat: '24h',
     theme: 'System',
-    highlight: false,
+    highlight: true,
     colormap: 'crabfit',
 
     setWeekStart: weekStart => set({ weekStart }),
