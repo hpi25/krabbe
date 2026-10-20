@@ -37,11 +37,14 @@ export async function saveSettings(patch: Partial<Settings>): Promise<void> {
   await ext.storage.local.set(patch);
 }
 
-/** Match pattern covering the whole origin of `url`, e.g. `https://host/*`. */
+/**
+ * Match pattern covering the host of `url`, e.g. `https://host/*`.
+ * The port is dropped: Firefox never matches patterns that contain one, and a portless pattern covers all ports.
+ */
 export function originPattern(url: string): string {
-  const { protocol, host } = new URL(url);
+  const { protocol, hostname } = new URL(url);
   if (protocol !== 'http:' && protocol !== 'https:') {
     throw new Error(`Unsupported URL scheme: ${protocol}`);
   }
-  return `${protocol}//${host}/*`;
+  return `${protocol}//${hostname}/*`;
 }
