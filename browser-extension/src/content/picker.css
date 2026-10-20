@@ -24,9 +24,12 @@ button:focus-visible { outline: 2px solid var(--secondary, var(--c-shadow)); out
 @keyframes load { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .btn, .btn.loading::after { transition: none; animation: none; } }
 .link { border: 0; background: none; padding: 0; color: var(--c-primary); text-decoration: underline; font-size: 14px; font-weight: 500; }
+/* Floats under the button: in flow it widens the host, which re-wraps the site's button row and makes the button jump. */
 .panel {
-  margin-top: 10px; padding: 16px 18px; min-width: 260px; max-width: 420px; border-radius: 6px;
-  background: var(--c-surface); display: grid; gap: 10px;
+  position: absolute; top: calc(100% + 6px); left: 50%; transform: translateX(-50%); z-index: 10;
+  width: max-content; min-width: 260px; max-width: min(420px, calc(100vw - 32px)); box-sizing: border-box;
+  padding: 16px 18px; border-radius: 6px; background: var(--c-surface); display: grid; gap: 10px;
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--c-text) 18%, transparent);
 }
 .panel[hidden] { display: none; }
 .group { display: grid; gap: 2px; }
