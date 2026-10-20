@@ -32,6 +32,38 @@ function errMsg(e: unknown): string {
 const krabbeForm = $<HTMLFormElement>('krabbe-form');
 const krabbeInput = $<HTMLInputElement>('krabbe-url');
 const krabbeStatus = $('krabbe-status');
+const krabbeGrant = $<HTMLButtonElement>('krabbe-grant');
+let currentKrabbeUrl = '';
+
+/** Shows a "Grant access" button while the extension lacks permission for the saved krabbe origin. */
+async function refreshKrabbeGrant(): Promise<void> {
+  try {
+    const pattern = originPattern(currentKrabbeUrl);
+    const has = await ext.permissions.contains({ origins: [pattern] });
+    krabbeGrant.hidden = has;
+    krabbeGrant.textContent = `Grant access to ${new URL(currentKrabbeUrl).origin}`;
+  } catch {
+    krabbeGrant.hidden = true;
+  }
+}
+
+krabbeGrant.addEventListener('click', () => {
+  // First async call in the handler, so the user gesture is intact.
+  let granted: Promise<boolean>;
+  try {
+    granted = ext.permissions.request({ origins: [originPattern(currentKrabbeUrl)] });
+  } catch (e) {
+    setStatus(krabbeStatus, errMsg(e), true);
+    return;
+  }
+  void granted.then(
+    async (ok) => {
+      setStatus(krabbeStatus, ok ? 'Access granted' : 'Permission denied', !ok);
+      await refreshKrabbeGrant();
+    },
+    (e) => setStatus(krabbeStatus, errMsg(e), true),
+  );
+});
 
 krabbeForm.addEventListener('submit', (ev) => {
   ev.preventDefault();
@@ -53,7 +85,9 @@ krabbeForm.addEventListener('submit', (ev) => {
       }
       await saveSettings({ krabbeUrl: url });
       krabbeInput.value = url;
+      currentKrabbeUrl = url;
       setStatus(krabbeStatus, 'Saved');
+      await refreshKrabbeGrant();
     } catch (e) {
       setStatus(krabbeStatus, errMsg(e), true);
     }
@@ -177,6 +211,8 @@ function renderAccount(account: Account): HTMLElement {
 async function render(): Promise<void> {
   const settings = await getSettings();
   krabbeInput.value = settings.krabbeUrl;
+  currentKrabbeUrl = settings.krabbeUrl;
+  await refreshKrabbeGrant();
   accountsEl.replaceChildren(...settings.accounts.map(renderAccount));
   if (settings.accounts.length === 0) {
     const empty = document.createElement('p');
@@ -199,7 +235,9 @@ accountForm.addEventListener('submit', (ev) => {
   // permissions.request must be the first async call: awaiting earlier loses the user gesture.
   let granted: Promise<boolean>;
   try {
-    granted = ext.permissions.request({ origins: [originPattern(draft.serverUrl)] });
+    // Also ask for the krabbe origin so the content script can be registered right away.
+    const origins = [...new Set([originPattern(draft.serverUrl), originPattern(currentKrabbeUrl)])];
+    granted = ext.permissions.request({ origins });
   } catch (e) {
     setStatus(accountStatus, errMsg(e), true);
     return;
