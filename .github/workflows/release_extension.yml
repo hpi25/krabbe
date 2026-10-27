@@ -55,7 +55,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          notes="Latest build of the Firefox extension from ${GITHUB_SHA::7}."
+          notes="Latest build of the Firefox extension from ${GITHUB_SHA::7}. Drag and drop the .xpi into `about:addons`. Beforehand, you may have to set `xpinstall.signatures.required` to `false` in `about:config` "
           if gh release view "$TAG" > /dev/null 2>&1; then
             gh release edit "$TAG" --title "Browser extension" --notes "$notes"
           else
