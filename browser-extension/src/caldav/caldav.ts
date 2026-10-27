@@ -1,13 +1,27 @@
 import { XMLParser } from 'fast-xml-parser';
-import type { Account, CalendarSettings } from '../storage.ts';
 
-export type Credentials = Pick<Account, 'serverUrl' | 'username' | 'password'>;
+export interface Credentials {
+  serverUrl: string;
+  username: string;
+  password: string;
+}
+
+export interface DiscoveredCalendar {
+  url: string;
+  name: string;
+  color?: string;
+}
+
+/** Why a request failed, coarse enough to show to the website without leaking server details. */
+export type CalDavErrorKind = 'http' | 'timeout' | 'network' | 'redirect' | 'protocol';
 
 export class CalDavError extends Error {
+  kind: CalDavErrorKind;
   status?: number;
-  constructor(message: string, status?: number) {
+  constructor(message: string, kind: CalDavErrorKind, status?: number) {
     super(message);
     this.name = 'CalDavError';
+    this.kind = kind;
     if (status !== undefined) this.status = status;
   }
 }
@@ -38,7 +52,7 @@ const REQUEST_TIMEOUT_MS = 20_000;
 function assertSameOrigin(creds: Credentials, url: string): void {
   const origin = new URL(url).origin;
   if (origin !== new URL(creds.serverUrl).origin) {
-    throw new CalDavError(`Calendar server redirected to another host (${origin}), which is not supported`);
+    throw new CalDavError(`Calendar server redirected to another host (${origin}), which is not supported`, 'redirect');
   }
 }
 
@@ -66,11 +80,11 @@ async function dav(
     });
   } catch (e) {
     if (e instanceof Error && (e.name === 'TimeoutError' || e.name === 'AbortError')) {
-      throw new CalDavError(`${method} ${url} failed: the server timed out after ${REQUEST_TIMEOUT_MS / 1000}s`);
+      throw new CalDavError(`${method} ${url} failed: the server timed out after ${REQUEST_TIMEOUT_MS / 1000}s`, 'timeout');
     }
-    throw new CalDavError(`${method} ${url} failed: ${e instanceof Error ? e.message : String(e)}`);
+    throw new CalDavError(`${method} ${url} failed: ${e instanceof Error ? e.message : String(e)}`, 'network');
   }
-  if (!res.ok) throw new CalDavError(`${method} ${url} returned HTTP ${res.status}`, res.status);
+  if (!res.ok) throw new CalDavError(`${method} ${url} returned HTTP ${res.status}`, 'http', res.status);
   const finalUrl = res.url || url;
   assertSameOrigin(creds, finalUrl);
   return { text: await res.text(), url: finalUrl };
@@ -114,7 +128,7 @@ function hrefProp(prop: Node, name: string): string | undefined {
 export async function discoverCalendars(
   creds: Credentials,
   fetchFn: typeof fetch = globalThis.fetch,
-): Promise<Omit<CalendarSettings, 'countAllDay'>[]> {
+): Promise<DiscoveredCalendar[]> {
   const principalBody = propfindBody('<d:current-user-principal/>');
   const base = new URL(creds.serverUrl);
 
@@ -132,7 +146,7 @@ export async function discoverCalendars(
   const principalHref = parseMultistatus(root.text)
     .map((r) => hrefProp(r.prop, 'current-user-principal'))
     .find((h) => h);
-  if (!principalHref) throw new CalDavError('Server did not report a current-user-principal');
+  if (!principalHref) throw new CalDavError('Server did not report a current-user-principal', 'protocol');
   const principalUrl = new URL(principalHref, root.url).href;
 
   // 3. Calendar home set.
@@ -140,7 +154,7 @@ export async function discoverCalendars(
   const homeHref = parseMultistatus(principal.text)
     .map((r) => hrefProp(r.prop, 'calendar-home-set'))
     .find((h) => h);
-  if (!homeHref) throw new CalDavError('Server did not report a calendar-home-set');
+  if (!homeHref) throw new CalDavError('Server did not report a calendar-home-set', 'protocol');
   const homeUrl = new URL(homeHref, principal.url).href;
 
   // 4. Calendars in the home set.
@@ -152,7 +166,7 @@ export async function discoverCalendars(
     '1',
     propfindBody('<d:resourcetype/><d:displayname/><a:calendar-color/><c:supported-calendar-component-set/>'),
   );
-  const out: Omit<CalendarSettings, 'countAllDay'>[] = [];
+  const out: DiscoveredCalendar[] = [];
   for (const { href, prop } of parseMultistatus(home.text)) {
     const rt = prop['resourcetype'];
     if (!rt || typeof rt !== 'object' || !('calendar' in rt)) continue;
@@ -161,7 +175,8 @@ export async function discoverCalendars(
     if (comps.length > 0 && !comps.some((c) => String(c['@_name']).toUpperCase() === 'VEVENT')) continue;
     const url = new URL(href, home.url).href;
     assertSameOrigin(creds, url);
-    out.push({ url, name: text(prop['displayname']) ?? url, color: text(prop['calendar-color']) });
+    const color = text(prop['calendar-color']);
+    out.push({ url, name: text(prop['displayname']) ?? url, ...(color ? { color } : {}) });
   }
   return out;
 }

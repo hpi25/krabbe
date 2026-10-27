@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { discoverCalendars, fetchCalendarData, CalDavError } from '../src/calendar/caldav.ts';
+import { discoverCalendars, fetchCalendarData, CalDavError } from '../src/caldav/caldav.ts';
 
 const fx = (name: string) => readFileSync(new URL(`./fixtures/${name}`, import.meta.url), 'utf8');
 
@@ -83,7 +83,7 @@ test('discovers Radicale calendars (default namespace, no color, no well-known)'
     return undefined; // incl. /.well-known/caldav -> 404, falls back to serverUrl
   });
   const cals = await discoverCalendars({ ...creds, serverUrl: 'https://rad.example/' }, fetchFn);
-  assert.deepEqual(cals, [{ url: 'https://rad.example/alice/work/', name: 'Work', color: undefined }]);
+  assert.deepEqual(cals, [{ url: 'https://rad.example/alice/work/', name: 'Work' }]);
 });
 
 test('401 rejects with CalDavError status 401', async () => {

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { extractBusy } from '../src/calendar/ical.ts';
+import { extractBusy } from '../src/caldav/ical.ts';
 
 const BERLIN = { countAllDay: false, timezone: 'Europe/Berlin' };
 

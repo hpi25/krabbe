@@ -1,38 +1,184 @@
 :root {
   color-scheme: light dark;
   --bg: #fff;
-  --fg: #1c1c1c;
-  --muted: #666;
-  --border: #ccc;
-  --card: #f5f5f5;
-  --error: #b00020;
+  --text: #1b1b1f;
+  --muted: #6b6b76;
+  --line: #e2e2e8;
+  --card: #f6f6f9;
+  --accent: #d0503c;
+  --error: #b3261e;
+  --ok: #2e7d32;
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-size: 15px;
+  line-height: 1.45;
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #1c1b22;
-    --fg: #f0f0f4;
-    --muted: #9a9aa5;
-    --border: #44434d;
-    --card: #2a2a33;
-    --error: #ff7a8a;
+    --bg: #17171b;
+    --text: #ececf1;
+    --muted: #9a9aa6;
+    --line: #2f2f37;
+    --card: #202026;
+    --accent: #f07a64;
+    --error: #f2b8b5;
+    --ok: #81c995;
   }
 }
-body { background: var(--bg); color: var(--fg); font: 14px system-ui, sans-serif; margin: 0; }
-main { max-width: 640px; margin: 0 auto; padding: 16px; }
-section { margin-bottom: 32px; }
-form { display: grid; gap: 8px; }
-label { display: grid; gap: 2px; color: var(--muted); }
-input[type="text"], input[type="url"], input[type="password"] {
-  padding: 6px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg); color: var(--fg);
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
 }
-button { justify-self: start; padding: 6px 12px; }
-.status { min-height: 1.2em; color: var(--muted); }
-.status.error { color: var(--error); }
-.account { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 12px; margin-bottom: 12px; }
-.account header { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-.account .actions { display: flex; gap: 8px; }
-.account .server { color: var(--muted); font-size: 12px; }
-.calendar { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
-.calendar .name { flex: 1; }
-.swatch { width: 12px; height: 12px; border-radius: 50%; background: var(--border); flex: none; }
-.calendar .allday { display: flex; align-items: center; gap: 4px; color: var(--muted); }
+main {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 16px 64px;
+}
+header {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+h1 {
+  margin: 0;
+  font-size: 1.6rem;
+}
+h2 {
+  font-size: 1.1rem;
+  margin: 0 0 8px;
+}
+section {
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+.muted {
+  color: var(--muted);
+  margin: 4px 0 12px;
+}
+.row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 12px;
+}
+.list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--line);
+}
+.inline {
+  display: flex;
+  gap: 8px;
+}
+.inline input {
+  flex: 1;
+}
+.stack {
+  display: grid;
+  gap: 10px;
+  max-width: 420px;
+  margin-top: 12px;
+}
+.stack label {
+  display: grid;
+  gap: 4px;
+}
+input,
+select,
+button {
+  font: inherit;
+  color: inherit;
+}
+input:not([type='checkbox']),
+select {
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--bg);
+  min-width: 0;
+}
+button {
+  padding: 6px 14px;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+}
+button.secondary {
+  background: transparent;
+  color: var(--accent);
+}
+button:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+summary {
+  cursor: pointer;
+  color: var(--accent);
+}
+.account {
+  background: var(--card);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+}
+.account-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.account-head .actions {
+  display: flex;
+  gap: 6px;
+}
+.calendars {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+}
+.calendars th {
+  text-align: left;
+  font-weight: 500;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+.calendars td,
+.calendars th {
+  padding: 6px 4px;
+  border-top: 1px solid var(--line);
+}
+.dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 8px;
+  background: var(--muted);
+}
+.tag {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+#status {
+  position: sticky;
+  bottom: 12px;
+  min-height: 1.4em;
+}
+#status.error {
+  color: var(--error);
+}
+#status.ok {
+  color: var(--ok);
+}
