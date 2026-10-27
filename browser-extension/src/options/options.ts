@@ -35,14 +35,23 @@ function status(message: string, kind: 'ok' | 'error' | '' = '') {
 const errorText = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
 let settings: Settings;
+let updates = Promise.resolve();
 
-/** Applies `change` to fresh settings, saves, re-renders. Reading first avoids clobbering other tabs' edits. */
-async function update(change: (s: Settings) => void) {
-  const s = await getSettings();
-  change(s);
-  await saveSettings(s);
-  settings = s;
-  render();
+/**
+ * Applies `change` to fresh settings, saves, re-renders. Reading first avoids clobbering other tabs' edits;
+ * queueing avoids two quick clicks reading the same settings and the second save undoing the first.
+ */
+function update(change: (s: Settings) => void): Promise<void> {
+  const run = async () => {
+    const s = await getSettings();
+    change(s);
+    await saveSettings(s);
+    settings = s;
+    render();
+  };
+  const next = updates.then(run);
+  updates = next.catch((e) => status(errorText(e), 'error'));
+  return next;
 }
 
 /** Must be called synchronously from a click/submit handler: browsers drop requests without a user gesture. */
