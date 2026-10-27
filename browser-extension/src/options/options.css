@@ -1,26 +1,31 @@
+/* Palette mirrored from frontend/src/app/global.css */
 :root {
   color-scheme: light dark;
+  --primary: #f79e00;
   --bg: #fff;
-  --text: #1b1b1f;
+  --text: #000;
   --muted: #6b6b76;
   --line: #e2e2e8;
-  --card: #f6f6f9;
-  --accent: #d0503c;
-  --error: #b3261e;
+  --card: #fef2dd;
+  --shadow: #f48600;
+  --secondary: #f48600;
+  --error: #d32f2f;
   --ok: #2e7d32;
   font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
   font-size: 15px;
   line-height: 1.45;
+  accent-color: var(--primary);
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #17171b;
-    --text: #ececf1;
+    --bg: #111;
+    --text: #ddd;
     --muted: #9a9aa6;
     --line: #2f2f37;
-    --card: #202026;
-    --accent: #f07a64;
-    --error: #f2b8b5;
+    --card: #30240f;
+    --shadow: #cc7313;
+    --secondary: #f4bb60;
+    --error: #e53935;
     --ok: #81c995;
   }
 }
@@ -106,17 +111,43 @@ select {
   background: var(--bg);
   min-width: 0;
 }
+/* Same look as the website's <Button>: the 3D edge is a box-shadow here instead of a ::before layer */
 button {
-  padding: 6px 14px;
-  border: 1px solid var(--accent);
-  border-radius: 6px;
-  background: var(--accent);
-  color: #fff;
+  padding: 0.6em 1.5em;
+  margin-bottom: 5px;
+  border: 0;
+  border-radius: 3px;
+  background: var(--primary);
+  color: var(--bg);
+  font-weight: 600;
   cursor: pointer;
+  box-shadow: 0 5px 0 var(--shadow);
+  transition: transform 150ms cubic-bezier(0, 0, 0.58, 1), box-shadow 150ms cubic-bezier(0, 0, 0.58, 1);
 }
-button.secondary {
+button:hover,
+button:focus {
+  transform: translateY(1px);
+  box-shadow: 0 4px 0 var(--shadow);
+}
+button:active {
+  transform: translateY(5px);
+  box-shadow: 0 0 0 var(--shadow);
+}
+button:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+button.secondary,
+button.secondary:hover,
+button.secondary:focus,
+button.secondary:active {
+  padding: 0.4em 1.3em;
+  margin-bottom: 0;
+  border: 1px solid var(--secondary);
   background: transparent;
-  color: var(--accent);
+  color: var(--secondary);
+  box-shadow: none;
+  transform: none;
 }
 button:disabled {
   opacity: 0.6;
@@ -124,7 +155,8 @@ button:disabled {
 }
 summary {
   cursor: pointer;
-  color: var(--accent);
+  color: var(--primary);
+  font-weight: 600;
 }
 .account {
   background: var(--card);
