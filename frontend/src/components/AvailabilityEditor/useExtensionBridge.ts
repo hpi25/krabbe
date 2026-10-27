@@ -71,6 +71,8 @@ export class ExtensionError extends Error {
 
 export type ExtensionStatus = 'checking' | 'present' | 'absent'
 
+let nextRequestId = 0
+
 interface Pending {
   resolve: (data: unknown) => void
   reject: (e: Error) => void
@@ -83,7 +85,8 @@ export const useExtensionBridge = () => {
 
   const request = useCallback((type: string, params: Record<string, unknown> = {}, timeoutMs = REQUEST_TIMEOUT_MS) =>
     new Promise<unknown>((resolve, reject) => {
-      const requestId = crypto.randomUUID()
+      // Only needs to be unique within this page; crypto.randomUUID is missing outside secure contexts (plain http)
+      const requestId = `${Date.now()}-${nextRequestId++}`
       const timeout = setTimeout(() => {
         pending.current.delete(requestId)
         reject(new ExtensionError('timeout'))
