@@ -12,7 +12,7 @@ import { removeBusyTimes } from '/src/utils/removeBusyTimes'
 import styles from './CalendarConflicts.module.scss'
 import { CalendarErrorCode, ExtensionCalendar, useExtensionBridge } from '../../useExtensionBridge'
 
-export const EXTENSION_URL = 'https://github.com/hpi25/krabbe/tree/main/browser-extension'
+export const EXTENSION_URL = 'https://github.com/hpi25/krabbe/releases/tag/browser-extension'
 
 interface CalendarConflictsProps {
   timezone: string
