@@ -3,3 +3,5 @@
 /.direnv
 .envrc
 .worktrees
+
+.env
