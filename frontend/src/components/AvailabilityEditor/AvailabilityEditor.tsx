@@ -11,10 +11,10 @@ import { calculateTable, makeClass, parseSpecificDate } from '/src/utils'
 import { getScoreForTime, MAXSCORE } from '/src/utils/star'
 
 import styles from './AvailabilityEditor.module.scss'
+import CalendarConflicts from './components/CalendarConflicts/CalendarConflicts'
 import GoogleCalendar from './components/GoogleCalendar/GoogleCalendar'
 import RecentEvents from './components/RecentEvents/RecentEvents'
 import ScoreSelector from './components/ScoreSelector/ScoreSelector'
-import { useCalendarBridge } from './useCalendarBridge'
 import viewerStyles from '../AvailabilityViewer/AvailabilityViewer.module.scss'
 import Skeleton from '../AvailabilityViewer/components/Skeleton/Skeleton'
 
@@ -61,8 +61,7 @@ const AvailabilityEditor = ({ eventId, times, timezone, value = [], onChange, ta
     }))
   ), [onChange, times, value])
 
-  // Let a browser extension clear times that conflict with the user's calendar
-  // `times` is in click order, so take the true min / max
+  // Range for the calendar extension; `times` is in click order, so take the true min / max
   const isSpecificDates = times[0]?.length === 13
   const { timeStart, timeEnd } = useMemo(() => {
     if (!isSpecificDates) return { timeStart: undefined, timeEnd: undefined }
@@ -75,14 +74,6 @@ const AvailabilityEditor = ({ eventId, times, timezone, value = [], onChange, ta
     }
     return { timeStart: min, timeEnd: max.add({ minutes: 15 }) }
   }, [isSpecificDates, times])
-  useCalendarBridge({
-    timezone,
-    timeStart,
-    timeEnd,
-    preferences: value,
-    onImport: onChange,
-  })
-
   // Selection keyboard shortcuts
   useEffect(() => {
     const handleKeydown = (e: KeyboardEvent) => {
@@ -125,7 +116,13 @@ const AvailabilityEditor = ({ eventId, times, timezone, value = [], onChange, ta
           preferences={value}
           onImport={onChange}
         />
-        <div data-calendar-bridge />
+        {timeStart && timeEnd && <CalendarConflicts
+          timezone={timezone}
+          timeStart={timeStart}
+          timeEnd={timeEnd}
+          preferences={value}
+          onImport={onChange}
+        />}
       </div>
     </Content>}
     <Content>

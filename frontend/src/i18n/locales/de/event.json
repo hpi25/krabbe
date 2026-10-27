@@ -79,6 +79,28 @@
       "calendar": {
         "info": "1+ Sterne setzen freie Zeiten auf diese Bewertung, 0 Sterne setzen belegte Zeiten auf 0 Sterne",
         "button": "Verfügbarkeit importieren"
+      },
+      "extension": {
+        "button": "Kalenderkonflikte entfernen",
+        "settings": "Kalendereinstellungen",
+        "title": "Kalenderkonflikte entfernen",
+        "info": "Ausgewählte Zeiten, die sich mit einem Termin in den markierten Kalendern überschneiden, werden entfernt. Nur Start- und Endzeiten verlassen die Erweiterung, nie der Inhalt des Termins.",
+        "loading": "Kalender werden geladen…",
+        "empty": "Noch keine Kalender eingerichtet. Füge in den Einstellungen der Erweiterung ein CalDAV-Konto hinzu.",
+        "confirm": "Konflikte entfernen",
+        "cancel": "Abbrechen",
+        "removed_one": "{{count}} überschneidende Zeit entfernt.",
+        "removed_other": "{{count}} überschneidende Zeiten entfernt.",
+        "failed": "Die Erweiterung antwortet nicht. Lade die Seite neu.",
+        "missing": "Sollen Zeiten, die mit deinem Kalender kollidieren, automatisch entfernt werden? <1>Hol dir die Browser-Erweiterung</1>.",
+        "errors": {
+          "auth": "falscher Benutzername oder Passwort",
+          "not-found": "Kalender nicht gefunden",
+          "timeout": "Server hat zu lange gebraucht",
+          "network": "Server nicht erreichbar",
+          "server": "Serverfehler",
+          "unknown": "unbekannter Fehler"
+        }
       }
     },
     "done": "Fertig"
