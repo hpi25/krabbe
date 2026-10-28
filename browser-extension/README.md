@@ -17,7 +17,16 @@ Event titles, descriptions, locations, attendees, your CalDAV server address and
 
 ## Install
 
-There's no store listing yet, so build it from source (Node 26, see [CONTRIBUTING.md](../CONTRIBUTING.md#browser-extension)):
+There's no store listing yet. Every change on `main` is built and published to the [browser extension release](https://github.com/hpi25/krabbe/releases/tag/browser-extension):
+
+- **Firefox:** download `krabbe.xpi` and drag and drop it into `about:addons`. The build is unsigned, so this only works in Firefox Developer Edition, Nightly or ESR, after setting `xpinstall.signatures.required` to `false` in `about:config`. In regular Firefox, open `about:debugging` → **This Firefox** → **Load Temporary Add-on...** and select `krabbe.xpi` instead. Firefox removes temporary add-ons when it restarts.
+- **Chrome / Chromium / Edge:** download `krabbe-chrome.zip` and unzip it into a folder you'll keep. Open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked** and select that folder. Don't delete the folder afterwards, because the extension is loaded from it.
+
+To update, download the new build and repeat these steps. In Chrome, you can instead unzip the new build over the old folder and click **Reload** on the extension.
+
+### From source
+
+Building it yourself needs Node 26 (see [CONTRIBUTING.md](../CONTRIBUTING.md#browser-extension)):
 
 ```sh
 cd browser-extension
