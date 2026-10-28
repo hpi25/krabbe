@@ -27,6 +27,7 @@ test('passes the resolved all-day setting per calendar and returns merged, clamp
     fetchCalendarData: async (_creds, url) => [`BEGIN:VEVENT\r\nSUMMARY:${url}\r\nEND:VEVENT`],
     extractBusy: (ics, opts) => {
       seen[ics] = opts.countAllDay;
+      opts.stats!.instances += 3;
       return ics.includes('/1/')
         ? [Object.assign({ start: T0 - H, end: T0 + 2 * H }, { summary: 'Dentist' })]
         : [{ start: T0 + H, end: T0 + 3 * H }];
@@ -38,7 +39,7 @@ test('passes the resolved all-day setting per calendar and returns merged, clamp
   assert.deepEqual(r.data.busy, [{ start: T0, end: T0 + 3 * H }]);
   for (const b of r.data.busy) assert.deepEqual(Object.keys(b).sort(), ['end', 'start']);
   assert.deepEqual(r.data.errors, []);
-  assert.deepEqual(r.data.stats.map((s) => [s.calendarId, s.events]).sort(), [['ignore', 1], ['inherit', 1]]);
+  assert.deepEqual(r.data.stats.map((s) => [s.calendarId, s.events]).sort(), [['ignore', 3], ['inherit', 3]]);
 });
 
 test('failing and unknown calendars become error codes, others still count', async () => {
@@ -56,6 +57,33 @@ test('failing and unknown calendars become error codes, others still count', asy
     r.data.errors.sort((a, b) => a.calendarId.localeCompare(b.calendarId)),
     [{ calendarId: 'ignore', code: 'auth' }, { calendarId: 'nope', code: 'not-found' }],
   );
+});
+
+test('passes the requested range to extractBusy for local expansion', async () => {
+  const seen: [number, number][] = [];
+  const deps: FetchBusyDeps = {
+    fetchCalendarData: async () => ['x'],
+    extractBusy: (_ics, opts) => {
+      seen.push([opts.rangeStart, opts.rangeEnd]);
+      return [];
+    },
+  };
+  await fetchBusy(settings, { ...range, calendarIds: ['inherit'] }, deps);
+  assert.deepEqual(seen, [[T0, T0 + 24 * H]]);
+});
+
+test('a truncated recurrence keeps its intervals but is reported as an error', async () => {
+  const deps: FetchBusyDeps = {
+    fetchCalendarData: async () => ['x'],
+    extractBusy: (_ics, opts) => {
+      opts.stats!.truncated = true;
+      return [{ start: T0, end: T0 + H }];
+    },
+  };
+  const r = await fetchBusy(settings, { ...range, calendarIds: ['inherit'] }, deps);
+  assert.ok(r.ok);
+  assert.deepEqual(r.data.busy, [{ start: T0, end: T0 + H }]);
+  assert.deepEqual(r.data.errors, [{ calendarId: 'inherit', code: 'unknown' }]);
 });
 
 test('rejects backwards, NaN and over-long ranges', async () => {

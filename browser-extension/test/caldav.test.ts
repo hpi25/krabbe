@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { discoverCalendars, fetchCalendarData, CalDavError } from '../src/caldav/caldav.ts';
+import { extractBusy } from '../src/caldav/ical.ts';
 
 const fx = (name: string) => readFileSync(new URL(`./fixtures/${name}`, import.meta.url), 'utf8');
 
@@ -107,7 +108,7 @@ test('network errors become CalDavError without status', async () => {
   });
 });
 
-test('fetchCalendarData sends time-range + expand and returns calendar-data incl. CDATA', async () => {
+test('fetchCalendarData sends a time-range without expand and returns calendar-data incl. CDATA', async () => {
   const { fetchFn, calls } = fakeFetch((method) => (method === 'REPORT' ? { body: fx('report.xml') } : undefined));
   const out = await fetchCalendarData(
     creds,
@@ -124,7 +125,9 @@ test('fetchCalendarData sends time-range + expand and returns calendar-data incl
   assert.equal(c.headers.get('Authorization'), expectedAuth);
   assert.equal(c.credentials, 'omit');
   assert.ok(c.body.includes('<c:time-range start="20261020T000000Z" end="20261027T000000Z"/>'));
-  assert.ok(c.body.includes('<c:expand start="20261020T000000Z" end="20261027T000000Z"/>'));
+  // Recurrences are expanded locally; server-side expand is the slow part on Nextcloud.
+  assert.ok(!c.body.includes('expand'));
+  assert.ok(c.body.includes('<c:calendar-data/>'));
   assert.equal(out.length, 2);
   assert.match(out[0]!, /^BEGIN:VCALENDAR/);
   assert.match(out[0]!, /SUMMARY:Fish & chips/);
@@ -200,4 +203,18 @@ test('request timeouts surface as a CalDavError saying so', async () => {
     (e: unknown) => e instanceof CalDavError && /timed out/.test(e.message),
   );
   assert.ok(seen[0] instanceof AbortSignal);
+});
+
+test('raw Nextcloud recurring event expands locally: rule, EXDATE, moved override, DST', async () => {
+  const { fetchFn } = fakeFetch((method) => (method === 'REPORT' ? { body: fx('nc-report-recurring.xml') } : undefined));
+  const start = new Date(Date.UTC(2026, 9, 19));
+  const end = new Date(Date.UTC(2026, 9, 29));
+  const [ics] = await fetchCalendarData(creds, 'https://cloud.example/remote.php/dav/calendars/alice/personal/', start, end, fetchFn);
+  const busy = extractBusy(ics!, { countAllDay: false, timezone: 'Europe/Berlin', rangeStart: start.getTime(), rangeEnd: end.getTime() });
+  const half = (d: number, h: number) => ({ start: Date.UTC(2026, 9, d, h), end: Date.UTC(2026, 9, d, h, 30) });
+  assert.deepEqual(
+    busy.sort((a, b) => a.start - b.start),
+    // Mon 19 moved to 14:00 CEST, Wed 21 excluded, Mon 26 / Wed 28 at 10:00 CET after the DST switch.
+    [half(19, 12), half(26, 9), half(28, 9)],
+  );
 });

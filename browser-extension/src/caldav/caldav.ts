@@ -196,7 +196,8 @@ export async function fetchCalendarData(
   const body =
     `<?xml version="1.0" encoding="utf-8"?>` +
     `<c:calendar-query xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav"><d:prop>` +
-    `<c:calendar-data><c:expand ${range}/></c:calendar-data></d:prop>` +
+    // Raw objects, no `<c:expand>`: expanding on the server is slow on Nextcloud, ical.ts does it locally.
+    `<c:calendar-data/></d:prop>` +
     `<c:filter><c:comp-filter name="VCALENDAR"><c:comp-filter name="VEVENT">` +
     `<c:time-range ${range}/></c:comp-filter></c:comp-filter></c:filter></c:calendar-query>`;
   const res = await dav(creds, fetchFn, 'REPORT', calendarUrl, '1', body);

@@ -14,6 +14,7 @@
     "@types/webextension-polyfill": "^0.12.6",
     "esbuild": "^0.28.2",
     "fast-xml-parser": "^5.11.2",
+    "ical.js": "^2.2.1",
     "typescript": "^6.0.3"
   }
 }
