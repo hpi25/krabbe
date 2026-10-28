@@ -1,5 +1,5 @@
 import { CalDavError, fetchCalendarData } from '../caldav/caldav.ts';
-import { extractBusy } from '../caldav/ical.ts';
+import { extractBusy, type ExtractOptions, type ExtractStats } from '../caldav/ical.ts';
 import type { BusyInterval } from '../caldav/types.ts';
 import type { BridgeReply, CalendarErrorCode, ResponseData } from '../protocol.ts';
 import { countsAllDay, type Settings } from '../storage.ts';
@@ -17,8 +17,6 @@ export interface FetchBusyParams {
 }
 
 const MAX_RANGE_MS = 366 * 24 * 60 * 60 * 1000;
-
-const countEvents = (ics: string) => ics.match(/^BEGIN:VEVENT\r?$/gm)?.length ?? 0;
 
 export function errorCode(err: unknown): CalendarErrorCode {
   if (!(err instanceof CalDavError)) return 'unknown';
@@ -71,9 +69,20 @@ export async function fetchBusy(
     }
     try {
       const list = await deps.fetchCalendarData(account, calendar.url, start, end);
-      const opts = { countAllDay: countsAllDay(calendar, settings), timezone: req.timezone };
+      const stats: ExtractStats = { instances: 0, truncated: false };
+      const opts: ExtractOptions = {
+        countAllDay: countsAllDay(calendar, settings),
+        timezone: req.timezone,
+        rangeStart: start.getTime(),
+        rangeEnd: end.getTime(),
+        stats,
+      };
       const intervals = list.flatMap((ics) => deps.extractBusy(ics, opts));
-      data.stats.push({ calendarId, events: list.reduce((n, ics) => n + countEvents(ics), 0), intervals: intervals.length });
+      data.stats.push({ calendarId, events: stats.instances, intervals: intervals.length });
+      if (stats.truncated) {
+        console.warn(`Krabbe: calendar "${calendar.name}" has a recurring event with too many instances, some were skipped`);
+        data.errors.push({ calendarId, code: 'unknown' });
+      }
       return intervals;
     } catch (e) {
       console.warn(`Krabbe: fetching calendar "${calendar.name}" failed`, e);
