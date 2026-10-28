@@ -31,6 +31,9 @@ const formatLocal = (dt: Temporal.ZonedDateTime) =>
 
 const formatUtc = (dt: Temporal.ZonedDateTime) => `${formatLocal(dt.withTimeZone('UTC'))}Z`
 
+// 128 random bits as hex; crypto.randomUUID is missing outside secure contexts (plain http)
+const randomUid = () => Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, '0')).join('')
+
 export const generateIcs = ({ start, duration, title, weekly }: IcsOptions): string => {
   // A weekly meeting starts at its next upcoming occurrence
   let first = start
@@ -62,7 +65,7 @@ export const generateIcs = ({ start, duration, title, weekly }: IcsOptions): str
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH',
     'BEGIN:VEVENT',
-    `UID:${crypto.randomUUID()}@krabbe`,
+    `UID:${randomUid()}@krabbe`,
     `DTSTAMP:${formatUtc(Temporal.Now.zonedDateTimeISO('UTC'))}`,
     ...dates,
     `SUMMARY:${escapeText(title)}`,
