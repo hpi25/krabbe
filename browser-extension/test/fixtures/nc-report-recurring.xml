@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+<d:multistatus xmlns:d="DAV:" xmlns:s="http://sabredav.org/ns" xmlns:cal="urn:ietf:params:xml:ns:caldav" xmlns:cs="http://calendarserver.org/ns/" xmlns:oc="http://owncloud.org/ns" xmlns:nc="http://nextcloud.org/ns">
+ <d:response>
+  <d:href>/remote.php/dav/calendars/alice/personal/7B3F2C1E-STANDUP.ics</d:href>
+  <d:propstat>
+   <d:prop>
+    <cal:calendar-data>BEGIN:VCALENDAR&#13;
+VERSION:2.0&#13;
+PRODID:-//IDN nextcloud.com//Calendar app 4.7.0//EN&#13;
+CALSCALE:GREGORIAN&#13;
+BEGIN:VTIMEZONE&#13;
+TZID:Europe/Berlin&#13;
+BEGIN:DAYLIGHT&#13;
+TZOFFSETFROM:+0100&#13;
+TZOFFSETTO:+0200&#13;
+TZNAME:CEST&#13;
+DTSTART:19700329T020000&#13;
+RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU&#13;
+END:DAYLIGHT&#13;
+BEGIN:STANDARD&#13;
+TZOFFSETFROM:+0200&#13;
+TZOFFSETTO:+0100&#13;
+TZNAME:CET&#13;
+DTSTART:19701025T030000&#13;
+RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU&#13;
+END:STANDARD&#13;
+END:VTIMEZONE&#13;
+BEGIN:VEVENT&#13;
+CREATED:20260901T120000Z&#13;
+DTSTAMP:20261001T080000Z&#13;
+LAST-MODIFIED:20261001T080000Z&#13;
+SEQUENCE:2&#13;
+UID:7b3f2c1e-standup&#13;
+DTSTART;TZID=Europe/Berlin:20260907T100000&#13;
+DTEND;TZID=Europe/Berlin:20260907T103000&#13;
+STATUS:CONFIRMED&#13;
+SUMMARY:Standup&#13;
+RRULE:FREQ=WEEKLY;BYDAY=MO,WE&#13;
+EXDATE;TZID=Europe/Berlin:20261021T100000&#13;
+END:VEVENT&#13;
+BEGIN:VEVENT&#13;
+CREATED:20260901T120000Z&#13;
+DTSTAMP:20261001T080000Z&#13;
+LAST-MODIFIED:20261001T080000Z&#13;
+SEQUENCE:3&#13;
+UID:7b3f2c1e-standup&#13;
+DTSTART;TZID=Europe/Berlin:20261019T140000&#13;
+DTEND;TZID=Europe/Berlin:20261019T143000&#13;
+STATUS:CONFIRMED&#13;
+SUMMARY:Standup (moved)&#13;
+RECURRENCE-ID;TZID=Europe/Berlin:20261019T100000&#13;
+END:VEVENT&#13;
+END:VCALENDAR&#13;
+</cal:calendar-data>
+   </d:prop>
+   <d:status>HTTP/1.1 200 OK</d:status>
+  </d:propstat>
+ </d:response>
+</d:multistatus>

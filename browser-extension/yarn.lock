@@ -332,6 +332,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"ical.js@npm:^2.2.1":
+  version: 2.2.1
+  resolution: "ical.js@npm:2.2.1"
+  checksum: 10c0/f08e896d613fe7dc737ca2cc5254b5413586c6f2d4c90568cdf077eff757051f8443d3b8705548e3dd7c3771e26aa3fdf7a2534b763242a9cf90a4150efefd85
+  languageName: node
+  linkType: hard
+
 "is-unsafe@npm:^2.0.0":
   version: 2.0.2
   resolution: "is-unsafe@npm:2.0.2"
@@ -347,6 +354,7 @@ __metadata:
     "@types/webextension-polyfill": "npm:^0.12.6"
     esbuild: "npm:^0.28.2"
     fast-xml-parser: "npm:^5.11.2"
+    ical.js: "npm:^2.2.1"
     typescript: "npm:^6.0.3"
   languageName: unknown
   linkType: soft

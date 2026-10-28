@@ -69,8 +69,6 @@
     "google_cal": "Sync with Google Calendar",
     "outlook_cal": "Sync with Outlook Calendar",
     "recent_event": "Sync with a recent event",
-    "calendar_conflicts": "Remove calendar conflicts",
-    "calendar_conflicts_install": "Needs the Krabbe browser extension",
     "integration": {
       "logout": "log out",
       "close": "close",
@@ -81,6 +79,28 @@
       "calendar": {
         "info": "1+ stars set free times to the score, 0 stars sets busy times to 0 stars",
         "button": "Import availability"
+      },
+      "extension": {
+        "button": "Remove calendar conflicts",
+        "settings": "Calendar settings",
+        "title": "Remove calendar conflicts",
+        "info": "Selected times that overlap an event in the checked calendars are removed. Only start and end times leave the extension, never what the event is.",
+        "loading": "Loading calendars…",
+        "empty": "No calendars set up yet. Add a CalDAV account in the extension settings.",
+        "confirm": "Remove conflicts",
+        "cancel": "Cancel",
+        "removed_one": "Removed {{count}} conflicting time.",
+        "removed_other": "Removed {{count}} conflicting times.",
+        "failed": "Couldn't reach the extension. Try reloading the page.",
+        "missing": "Want times that clash with your calendar removed automatically? <1>Get the browser extension</1>.",
+        "errors": {
+          "auth": "wrong username or password",
+          "not-found": "calendar not found",
+          "timeout": "server took too long",
+          "network": "server unreachable",
+          "server": "server error",
+          "unknown": "unknown error"
+        }
       }
     },
     "done": "Done"

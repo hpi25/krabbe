@@ -1,89 +1,71 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { routeMessage, type RouterDeps } from '../src/background/router.ts';
+import { handleBridgeMessage, type RouterDeps } from '../src/background/router.ts';
+import { defaultSettings, type Settings } from '../src/storage.ts';
 
-const fetchMsg = { type: 'fetch-busy' as const, calendarUrls: [], timeStart: 'a', timeEnd: 'b', timezone: 'UTC' };
-const base: RouterDeps = {
-  getSettings: async () => ({ krabbeUrl: '', accounts: [], selectedCalendars: [] }),
-  saveSettings: async () => undefined,
-  fetchBusy: async () => ({ busy: [], errors: [], stats: [] }),
-  discoverCalendars: async () => [{ url: 'u', name: 'n' }],
-  openOptionsPage: () => undefined,
-  extensionBaseUrl: 'moz-extension://abc/',
+const settings: Settings = {
+  ...defaultSettings(),
+  instances: ['https://krabbe.hpi.church', 'http://localhost:3000'],
+  accounts: [
+    {
+      id: 'a', label: 'Work', serverUrl: 'https://secret.example', username: 'alice', password: 'hunter2',
+      calendars: [
+        { id: 'c1', url: 'https://secret.example/c1/', name: 'Main', color: '#f00', enabled: true, allDay: 'inherit' },
+        { id: 'c2', url: 'https://secret.example/c2/', name: 'Other', enabled: false, allDay: 'count' },
+      ],
+    },
+  ],
 };
-const once = (msg: Parameters<typeof routeMessage>[0], sender: { tab?: unknown; url?: string }, deps: RouterDeps) =>
-  new Promise<unknown>((resolve) => {
-    assert.equal(routeMessage(msg, sender, resolve, deps), true);
-  });
+let opened = 0;
+const deps: RouterDeps = {
+  getSettings: async () => settings,
+  fetchBusy: async () => ({ ok: true, data: { busy: [], errors: [], stats: [] } }),
+  openOptionsPage: () => void opened++,
+  extensionId: 'me',
+};
+const tab = { id: 'me', tab: {}, url: 'https://krabbe.hpi.church/some-event-123' };
+const msg = (request: unknown) => ({ channel: 'krabbe-bridge', request });
 
-test('rejecting getSettings still replies', async () => {
-  const r = await once(fetchMsg, {}, { ...base, getSettings: async () => { throw new Error('storage down'); } });
-  assert.deepEqual(r, { busy: [], errors: [{ calendarUrl: '', message: 'storage down' }], stats: [] });
+test('hello answers with the protocol version', async () => {
+  assert.deepEqual(await handleBridgeMessage(msg({ type: 'hello' }), tab, deps), { ok: true, data: { version: 1 } });
 });
 
-const discover = { type: 'discover' as const, creds: { serverUrl: 'x', username: 'u', password: 'p' } };
-const refused = { error: 'discover is only available from the settings page' };
-
-test('discover from content script (web url + tab) is refused', async () => {
-  assert.deepEqual(await once(discover, { tab: {}, url: 'https://krabbe.hpi.church/xyz' }, base), refused);
+test('works for a non-default instance with a port', async () => {
+  const r = await handleBridgeMessage(msg({ type: 'hello' }), { ...tab, url: 'http://localhost:3000/abc' }, deps);
+  assert.equal(r.ok, true);
 });
 
-test('discover with no sender url is refused', async () => {
-  assert.deepEqual(await once(discover, {}, base), refused);
+test('refuses other extensions, non-tab senders and unconfigured origins', async () => {
+  const forbidden = { ok: false, error: 'forbidden' };
+  assert.deepEqual(await handleBridgeMessage(msg({ type: 'hello' }), { ...tab, id: 'other' }, deps), forbidden);
+  assert.deepEqual(await handleBridgeMessage(msg({ type: 'hello' }), { id: 'me', url: tab.url }, deps), forbidden);
+  assert.deepEqual(await handleBridgeMessage(msg({ type: 'hello' }), { ...tab, url: 'https://evil.example/' }, deps), forbidden);
+  assert.deepEqual(await handleBridgeMessage(msg({ type: 'hello' }), { ...tab, url: 'http://localhost:4000/' }, deps), forbidden);
 });
 
-test('discover from options page opened in a tab works', async () => {
-  const r = await once(discover, { tab: {}, url: 'moz-extension://abc/options.html' }, base);
-  assert.deepEqual(r, { calendars: [{ url: 'u', name: 'n' }] });
-});
-
-test('synchronously throwing getSettings still replies', async () => {
-  const r = await once(fetchMsg, {}, { ...base, getSettings: () => { throw new Error('sync'); } });
-  assert.deepEqual(r, { busy: [], errors: [{ calendarUrl: '', message: 'sync' }], stats: [] });
-});
-
-test('unknown message is not handled', () => {
-  assert.equal(routeMessage({ type: 'nope' } as never, {}, () => {}, base), false);
-});
-
-test('picker-data replies with groups only, no credentials', async () => {
-  const settings = {
-    krabbeUrl: 'https://k',
-    selectedCalendars: ['u1', 'gone'],
-    accounts: [
-      { id: 'a', label: 'Work', serverUrl: 'https://secret.example', username: 'alice', password: 'hunter2', calendars: [
-        { url: 'u1', name: 'Main', color: '#f00', countAllDay: false },
-        { url: 'u2', name: 'Other', countAllDay: false },
-      ] },
-      { id: 'b', label: 'Home', serverUrl: 's', username: 'u', password: 'p', calendars: [] },
-    ],
-  };
-  const r = await once({ type: 'picker-data' }, { tab: {}, url: 'https://k/x' }, { ...base, getSettings: async () => settings });
+test('list-calendars returns opaque ids and names, never urls or credentials', async () => {
+  const r = await handleBridgeMessage(msg({ type: 'list-calendars' }), tab, deps);
   assert.deepEqual(r, {
-    groups: [
-      { label: 'Work', calendars: [
-        { url: 'u1', name: 'Main', color: '#f00', checked: true },
-        { url: 'u2', name: 'Other', checked: false },
-      ] },
-      { label: 'Home', calendars: [] },
-    ],
+    ok: true,
+    data: {
+      calendars: [
+        { id: 'c1', name: 'Main', color: '#f00', account: 'Work', enabled: true },
+        { id: 'c2', name: 'Other', account: 'Work', enabled: false },
+      ],
+    },
   });
   assert.ok(!/hunter2|alice|secret\.example/.test(JSON.stringify(r)));
 });
 
-test('picker-data with failing storage replies with empty groups', async () => {
-  const r = await once({ type: 'picker-data' }, {}, { ...base, getSettings: async () => { throw new Error('x'); } });
-  assert.deepEqual(r, { groups: [] });
+test('open-settings opens the options page', async () => {
+  const before = opened;
+  assert.deepEqual(await handleBridgeMessage(msg({ type: 'open-settings' }), tab, deps), { ok: true, data: {} });
+  assert.equal(opened, before + 1);
 });
 
-test('save-selection persists only selectedCalendars', async () => {
-  const saved: unknown[] = [];
-  const r = await once({ type: 'save-selection', calendarUrls: ['a', 'b'] }, {}, { ...base, saveSettings: async (p) => { saved.push(p); } });
-  assert.deepEqual(r, { ok: true });
-  assert.deepEqual(saved, [{ selectedCalendars: ['a', 'b'] }]);
-});
-
-test('save-selection reports storage errors', async () => {
-  const r = await once({ type: 'save-selection', calendarUrls: [] }, {}, { ...base, saveSettings: async () => { throw new Error('full'); } });
-  assert.deepEqual(r, { ok: false, error: 'full' });
+test('malformed requests and storage failures still reply', async () => {
+  assert.deepEqual(await handleBridgeMessage(msg({ type: 'discover' }), tab, deps), { ok: false, error: 'bad-request' });
+  assert.deepEqual(await handleBridgeMessage(null, tab, deps), { ok: false, error: 'bad-request' });
+  const broken = { ...deps, getSettings: async () => { throw new Error('storage down'); } };
+  assert.deepEqual(await handleBridgeMessage(msg({ type: 'hello' }), tab, broken), { ok: false, error: 'internal' });
 });

@@ -1,72 +1,65 @@
-import { discoverCalendars } from '../calendar/caldav.ts';
-import type { DiscoverResponse, FetchBusyResponse, Message, PickerDataResponse } from '../messages.ts';
-import { getSettings, saveSettings } from '../storage.ts';
-import { fetchBusy } from './fetchBusy.ts';
-import { pickerGroups } from './pickerGroups.ts';
+import { PROTOCOL_VERSION, parseRequest, type BridgeReply, type PickerCalendar } from '../protocol.ts';
+import type { Settings } from '../storage.ts';
+import type { fetchBusy } from './busy.ts';
 
 export interface RouterDeps {
-  getSettings: typeof getSettings;
-  saveSettings: typeof saveSettings;
+  getSettings: () => Promise<Settings>;
   fetchBusy: typeof fetchBusy;
-  discoverCalendars: typeof discoverCalendars;
   openOptionsPage: () => Promise<void> | void;
-  /** e.g. `moz-extension://<uuid>/`; senders whose url starts with it are extension pages. */
-  extensionBaseUrl: string;
+  /** `runtime.id`; messages from other extensions are refused. */
+  extensionId: string;
 }
 
-const defaultDeps: RouterDeps = { getSettings, saveSettings, fetchBusy, discoverCalendars, openOptionsPage: () => undefined, extensionBaseUrl: '' };
-
-function errMsg(e: unknown): string {
-  return e instanceof Error ? e.message : String(e);
+export interface Sender {
+  id?: string;
+  url?: string;
+  tab?: unknown;
 }
 
-/** Returns true if `reply` will be called asynchronously; false/undefined otherwise. */
-export function routeMessage(
-  msg: Message | undefined,
-  sender: { tab?: unknown; url?: string },
-  reply: (r?: unknown) => void,
-  deps: RouterDeps = defaultDeps,
-): boolean {
-  switch (msg?.type) {
-    case 'discover': {
-      if (!deps.extensionBaseUrl || !sender.url?.startsWith(deps.extensionBaseUrl)) {
-        reply({ error: 'discover is only available from the settings page' } satisfies DiscoverResponse);
-        return true;
-      }
-      deps.discoverCalendars(msg.creds).then(
-        (calendars) => reply({ calendars } satisfies DiscoverResponse),
-        (e) => reply({ error: errMsg(e) } satisfies DiscoverResponse),
-      );
-      return true;
+function senderOrigin(sender: Sender): string | null {
+  try {
+    return sender.url ? new URL(sender.url).origin : null;
+  } catch {
+    return null;
+  }
+}
+
+export function pickerCalendars(settings: Settings): PickerCalendar[] {
+  return settings.accounts.flatMap((a) =>
+    a.calendars.map((c) => ({
+      id: c.id,
+      name: c.name,
+      ...(c.color ? { color: c.color } : {}),
+      account: a.label,
+      enabled: c.enabled,
+    })),
+  );
+}
+
+/** Handles one bridge request from the content script. Never throws. */
+export async function handleBridgeMessage(raw: unknown, sender: Sender, deps: RouterDeps): Promise<BridgeReply> {
+  try {
+    if (sender.id !== deps.extensionId || !sender.tab) return { ok: false, error: 'forbidden' };
+    const request = parseRequest((raw as { request?: unknown } | null)?.request);
+    if (!request) return { ok: false, error: 'bad-request' };
+
+    const settings = await deps.getSettings();
+    const origin = senderOrigin(sender);
+    if (!origin || !settings.instances.includes(origin)) return { ok: false, error: 'forbidden' };
+
+    switch (request.type) {
+      case 'hello':
+        return { ok: true, data: { version: PROTOCOL_VERSION } };
+      case 'list-calendars':
+        return { ok: true, data: { calendars: pickerCalendars(settings) } };
+      case 'fetch-busy':
+        return await deps.fetchBusy(settings, request);
+      case 'open-settings':
+        await deps.openOptionsPage();
+        return { ok: true, data: {} };
     }
-    case 'fetch-busy':
-      Promise.resolve()
-        .then(() => deps.getSettings())
-        .then((s) => deps.fetchBusy(s, msg))
-        .catch((e): FetchBusyResponse => ({ busy: [], errors: [{ calendarUrl: '', message: errMsg(e) }], stats: [] }))
-        .then(reply);
-      return true;
-    case 'picker-data':
-      Promise.resolve()
-        .then(() => deps.getSettings())
-        .then((s): PickerDataResponse => ({ groups: pickerGroups(s) }))
-        .catch((): PickerDataResponse => ({ groups: [] }))
-        .then(reply);
-      return true;
-    case 'save-selection': {
-      const urls = Array.isArray(msg.calendarUrls) ? msg.calendarUrls.filter((u) => typeof u === 'string') : [];
-      Promise.resolve()
-        .then(() => deps.saveSettings({ selectedCalendars: urls }))
-        .then(
-          () => reply({ ok: true }),
-          (e) => reply({ ok: false, error: errMsg(e) }),
-        );
-      return true;
-    }
-    case 'open-options':
-      void deps.openOptionsPage();
-      return false;
-    default:
-      return false;
+  } catch (e) {
+    console.error('Krabbe: bridge request failed', e);
+    return { ok: false, error: 'internal' };
   }
 }

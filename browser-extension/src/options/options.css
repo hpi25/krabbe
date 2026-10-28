@@ -1,38 +1,216 @@
+/* Palette mirrored from frontend/src/app/global.css */
 :root {
   color-scheme: light dark;
+  --primary: #f79e00;
   --bg: #fff;
-  --fg: #1c1c1c;
-  --muted: #666;
-  --border: #ccc;
-  --card: #f5f5f5;
-  --error: #b00020;
+  --text: #000;
+  --muted: #6b6b76;
+  --line: #e2e2e8;
+  --card: #fef2dd;
+  --shadow: #f48600;
+  --secondary: #f48600;
+  --error: #d32f2f;
+  --ok: #2e7d32;
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-size: 15px;
+  line-height: 1.45;
+  accent-color: var(--primary);
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #1c1b22;
-    --fg: #f0f0f4;
-    --muted: #9a9aa5;
-    --border: #44434d;
-    --card: #2a2a33;
-    --error: #ff7a8a;
+    --bg: #111;
+    --text: #ddd;
+    --muted: #9a9aa6;
+    --line: #2f2f37;
+    --card: #30240f;
+    --shadow: #cc7313;
+    --secondary: #f4bb60;
+    --error: #e53935;
+    --ok: #81c995;
   }
 }
-body { background: var(--bg); color: var(--fg); font: 14px system-ui, sans-serif; margin: 0; }
-main { max-width: 640px; margin: 0 auto; padding: 16px; }
-section { margin-bottom: 32px; }
-form { display: grid; gap: 8px; }
-label { display: grid; gap: 2px; color: var(--muted); }
-input[type="text"], input[type="url"], input[type="password"] {
-  padding: 6px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg); color: var(--fg);
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
 }
-button { justify-self: start; padding: 6px 12px; }
-.status { min-height: 1.2em; color: var(--muted); }
-.status.error { color: var(--error); }
-.account { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 12px; margin-bottom: 12px; }
-.account header { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-.account .actions { display: flex; gap: 8px; }
-.account .server { color: var(--muted); font-size: 12px; }
-.calendar { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
-.calendar .name { flex: 1; }
-.swatch { width: 12px; height: 12px; border-radius: 50%; background: var(--border); flex: none; }
-.calendar .allday { display: flex; align-items: center; gap: 4px; color: var(--muted); }
+main {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 16px 64px;
+}
+header {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+h1 {
+  margin: 0;
+  font-size: 1.6rem;
+}
+h2 {
+  font-size: 1.1rem;
+  margin: 0 0 8px;
+}
+section {
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+.muted {
+  color: var(--muted);
+  margin: 4px 0 12px;
+}
+.row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 12px;
+}
+.list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--line);
+}
+.inline {
+  display: flex;
+  gap: 8px;
+}
+.inline input {
+  flex: 1;
+}
+.stack {
+  display: grid;
+  gap: 10px;
+  max-width: 420px;
+  margin-top: 12px;
+}
+.stack label {
+  display: grid;
+  gap: 4px;
+}
+input,
+select,
+button {
+  font: inherit;
+  color: inherit;
+}
+input:not([type='checkbox']),
+select {
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--bg);
+  min-width: 0;
+}
+/* Same look as the website's <Button>: the 3D edge is a box-shadow here instead of a ::before layer */
+button {
+  padding: 0.6em 1.5em;
+  margin-bottom: 5px;
+  border: 0;
+  border-radius: 3px;
+  background: var(--primary);
+  color: var(--bg);
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 5px 0 var(--shadow);
+  transition: transform 150ms cubic-bezier(0, 0, 0.58, 1), box-shadow 150ms cubic-bezier(0, 0, 0.58, 1);
+}
+button:hover,
+button:focus {
+  transform: translateY(1px);
+  box-shadow: 0 4px 0 var(--shadow);
+}
+button:active {
+  transform: translateY(5px);
+  box-shadow: 0 0 0 var(--shadow);
+}
+button:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+button.secondary,
+button.secondary:hover,
+button.secondary:focus,
+button.secondary:active {
+  padding: 0.4em 1.3em;
+  margin-bottom: 0;
+  border: 1px solid var(--secondary);
+  background: transparent;
+  color: var(--secondary);
+  box-shadow: none;
+  transform: none;
+}
+button:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+summary {
+  cursor: pointer;
+  color: var(--primary);
+  font-weight: 600;
+}
+.account {
+  background: var(--card);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+}
+.account-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.account-head .actions {
+  display: flex;
+  gap: 6px;
+}
+.calendars {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+}
+.calendars th {
+  text-align: left;
+  font-weight: 500;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+.calendars td,
+.calendars th {
+  padding: 6px 4px;
+  border-top: 1px solid var(--line);
+}
+.dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 8px;
+  background: var(--muted);
+}
+.tag {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+#status {
+  position: sticky;
+  bottom: 12px;
+  min-height: 1.4em;
+}
+#status.error {
+  color: var(--error);
+}
+#status.ok {
+  color: var(--ok);
+}

@@ -1,38 +1,60 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Krabbe settings</title>
+    <link rel="stylesheet" href="options.css" />
   </head>
   <body>
     <main>
-      <h1>Krabbe settings</h1>
+      <header>
+        <img src="res/icon48.png" alt="" width="40" height="40" />
+        <div>
+          <h1>Krabbe</h1>
+          <p class="muted">
+            Removes times that clash with your calendars from your availability. Only the start and end of busy
+            times ever reach the website: no event titles, no details, no passwords.
+          </p>
+        </div>
+      </header>
 
       <section>
-        <h2>Krabbe server</h2>
-        <form id="krabbe-form">
-          <label>URL <input id="krabbe-url" type="url" required></label>
-          <button type="submit">Save</button>
-        </form>
-        <p id="krabbe-status" class="status" role="status"></p>
-        <button id="krabbe-grant" type="button" hidden></button>
+        <h2>Defaults</h2>
+        <label class="row">
+          <input type="checkbox" id="count-all-day" />
+          <span>Treat all-day events as busy <span class="muted">(calendars can override this below)</span></span>
+        </label>
       </section>
 
       <section>
-        <h2>CalDAV accounts</h2>
+        <h2>Krabbe websites</h2>
+        <p class="muted">The extension only works on these sites.</p>
+        <ul id="instances" class="list"></ul>
+        <form id="add-instance" class="inline">
+          <input type="url" name="url" placeholder="https://krabbe.example.org" required />
+          <button type="submit">Add</button>
+        </form>
+      </section>
+
+      <section>
+        <h2>Calendar accounts</h2>
         <div id="accounts"></div>
-        <h3>Add account</h3>
-        <form id="account-form">
-          <label>Label <input name="label" type="text" required></label>
-          <label>Server URL <input name="serverUrl" type="url" required placeholder="https://dav.example.com/"></label>
-          <label>Username <input name="username" type="text" required autocomplete="off"></label>
-          <label>Password <input name="password" type="password" required autocomplete="new-password"></label>
-          <button type="submit">Add account</button>
-        </form>
-        <p id="account-status" class="status" role="status"></p>
+        <details id="add-account-box">
+          <summary>Add a CalDAV account</summary>
+          <form id="add-account" class="stack">
+            <label>Name <input name="label" placeholder="Work" /></label>
+            <label>Server URL <input type="url" name="serverUrl" placeholder="https://cloud.example.org" required /></label>
+            <label>Username <input name="username" autocomplete="username" required /></label>
+            <label>Password <input type="password" name="password" autocomplete="current-password" required /></label>
+            <p class="muted">For Nextcloud, use an app password (Settings → Security).</p>
+            <button type="submit">Find calendars</button>
+          </form>
+        </details>
       </section>
+
+      <p id="status" role="status"></p>
     </main>
-    <script type="module" src="options.js"></script>
+    <script src="options.js"></script>
   </body>
 </html>

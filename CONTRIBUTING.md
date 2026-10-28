@@ -35,7 +35,7 @@ For code-specific documentation, please see the README files in the repo.
 
 ### Browser Extension
 
-The browser extension lives in `browser-extension/` and is a TypeScript Manifest V3 Firefox extension. It needs Node 26 and Yarn 4 (pinned via `packageManager`), so enable corepack first:
+The browser extension lives in `browser-extension/` and is a TypeScript Manifest V3 extension for Firefox and Chrome. It needs Node 26 and Yarn 4 (pinned via `packageManager`), so enable corepack first:
 
 ```sh
 cd browser-extension
@@ -44,14 +44,14 @@ yarn install
 yarn build
 ```
 
-`yarn build` writes the extension to `browser-extension/dist/firefox`.
+`yarn build` writes the extension to `browser-extension/dist/firefox` and `browser-extension/dist/chrome` (`yarn build --target=chrome` builds just one).
 
-To load it into Firefox:
+To load it:
 
-1. Open `about:debugging`, then go to **This Firefox**.
-2. Click **Load Temporary Add-on...** and select `browser-extension/dist/firefox/manifest.json`.
-3. Open the extension's settings tab and set the krabbe URL to `http://localhost:1234`.
-4. Add a CalDAV test account. A local [Radicale](https://radicale.org/) server works well. For local testing, run it with authentication disabled (any username and password is accepted, and the username becomes the account). Create a config file `radicale-config` with:
+1. **Firefox:** open `about:debugging`, go to **This Firefox**, click **Load Temporary Add-on...** and select `browser-extension/dist/firefox/manifest.json`.
+   **Chrome:** open `chrome://extensions`, enable **Developer mode**, click **Load unpacked** and select `browser-extension/dist/chrome`.
+2. Click the extension's toolbar icon to open its settings, and add `http://localhost:1234` under **Krabbe websites**.
+3. Add a CalDAV test account. A local [Radicale](https://radicale.org/) server works well. For local testing, run it with authentication disabled (any username and password is accepted, and the username becomes the account). Create a config file `radicale-config` with:
 
    ```ini
    [server]
@@ -71,7 +71,9 @@ To load it into Firefox:
 
    Firefox match patterns can't contain a port, so the extension asks for `http://localhost/*`, which covers both krabbe on `:1234` and the CalDAV server on `:5232`. `https://krabbe.hpi.church/*` is granted at install, so production works without visiting the settings page.
 
-After rebuilding, click **Reload** on the extension in `about:debugging` to pick up the changes.
+After rebuilding, click **Reload** on the extension (in `about:debugging` or `chrome://extensions`) to pick up the changes, then reload the krabbe tab.
+
+The website and the extension talk through a small `postMessage` protocol defined in `browser-extension/src/protocol.ts` and mirrored in `frontend/src/components/AvailabilityEditor/useExtensionBridge.ts`. Change both together.
 
 Checks that CI also runs (from `browser-extension/`):
 

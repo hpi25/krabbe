@@ -1,273 +1,276 @@
+import { discoverCalendars, type Credentials } from '../caldav/caldav.ts';
 import { ext } from '../platform.ts';
-import { getSettings, saveSettings, originPattern, type Account } from '../storage.ts';
-import type { DiscoverRequest, DiscoverResponse } from '../messages.ts';
-import { normalizeKrabbeUrl, mergeRefreshedCalendars, originStillUsed } from './accounts.ts';
-import css from './options.css';
-
-const style = document.createElement('style');
-style.textContent = css;
-document.head.append(style);
+import {
+  DEFAULT_INSTANCE,
+  getSettings,
+  mergeDiscovered,
+  newId,
+  normalizeInstance,
+  originPattern,
+  saveSettings,
+  type Account,
+  type AllDayMode,
+  type Settings,
+} from '../storage.ts';
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 
-function setStatus(el: HTMLElement, text: string, isError = false): void {
-  el.textContent = text;
-  el.classList.toggle('error', isError);
+function h<K extends keyof HTMLElementTagNameMap>(
+  tag: K,
+  props: Partial<HTMLElementTagNameMap[K]> & Record<string, unknown> = {},
+  ...children: (Node | string)[]
+): HTMLElementTagNameMap[K] {
+  const el = document.createElement(tag);
+  Object.assign(el, props);
+  el.append(...children);
+  return el;
 }
 
-async function discover(account: Pick<Account, 'serverUrl' | 'username' | 'password'>): Promise<DiscoverResponse> {
-  const msg: DiscoverRequest = {
-    type: 'discover',
-    creds: { serverUrl: account.serverUrl, username: account.username, password: account.password },
+function status(message: string, kind: 'ok' | 'error' | '' = '') {
+  const el = $('status');
+  el.textContent = message;
+  el.className = kind;
+}
+
+const errorText = (e: unknown) => (e instanceof Error ? e.message : String(e));
+
+let settings: Settings;
+let updates = Promise.resolve();
+
+/**
+ * Applies `change` to fresh settings, saves, re-renders. Reading first avoids clobbering other tabs' edits;
+ * queueing avoids two quick clicks reading the same settings and the second save undoing the first.
+ */
+function update(change: (s: Settings) => void): Promise<void> {
+  const run = async () => {
+    const s = await getSettings();
+    change(s);
+    await saveSettings(s);
+    settings = s;
+    render();
   };
-  return (await ext.runtime.sendMessage(msg)) as DiscoverResponse;
+  const next = updates.then(run);
+  updates = next.catch((e) => status(errorText(e), 'error'));
+  return next;
 }
 
-function errMsg(e: unknown): string {
-  return e instanceof Error ? e.message : String(e);
+/** Must be called synchronously from a click/submit handler: browsers drop requests without a user gesture. */
+function requestOrigin(url: string): Promise<boolean> {
+  return ext.permissions.request({ origins: [originPattern(url)] });
 }
 
-// --- Krabbe URL ---
+/** Drops host permission for `url` unless something else still needs it. */
+async function releaseOrigin(url: string, s: Settings) {
+  const pattern = originPattern(url);
+  const inUse = [...s.instances, ...s.accounts.map((a) => a.serverUrl)].some((u) => {
+    try {
+      return originPattern(u) === pattern;
+    } catch {
+      return false;
+    }
+  });
+  if (inUse || pattern === originPattern(DEFAULT_INSTANCE)) return;
+  await ext.permissions.remove({ origins: [pattern] }).catch(() => undefined);
+}
 
-const krabbeForm = $<HTMLFormElement>('krabbe-form');
-const krabbeInput = $<HTMLInputElement>('krabbe-url');
-const krabbeStatus = $('krabbe-status');
-const krabbeGrant = $<HTMLButtonElement>('krabbe-grant');
-let currentKrabbeUrl = '';
+function renderInstances() {
+  $('instances').replaceChildren(
+    ...settings.instances.map((origin) =>
+      h(
+        'li',
+        {},
+        h('span', {}, origin),
+        h('button', {
+          type: 'button',
+          className: 'secondary',
+          textContent: 'Remove',
+          onclick: () =>
+            void update((s) => {
+              s.instances = s.instances.filter((i) => i !== origin);
+            }).then(() => releaseOrigin(origin, settings)),
+        }),
+      ),
+    ),
+  );
+  if (settings.instances.length === 0) $('instances').append(h('li', { className: 'muted' }, 'No sites yet.'));
+}
 
-/** Shows a "Grant access" button while the extension lacks permission for the saved krabbe origin. */
-async function refreshKrabbeGrant(): Promise<void> {
+function calendarRow(account: Account, index: number) {
+  const cal = account.calendars[index]!;
+  const set = (change: (c: (typeof account.calendars)[number]) => void) =>
+    void update((s) => {
+      const c = s.accounts.find((a) => a.id === account.id)?.calendars.find((c) => c.id === cal.id);
+      if (c) change(c);
+    });
+
+  const dot = h('span', { className: 'dot' });
+  if (cal.color) dot.style.background = cal.color.slice(0, 7);
+  const allDay = h(
+    'select',
+    { onchange: (e: Event) => set((c) => (c.allDay = (e.target as HTMLSelectElement).value as AllDayMode)) },
+    h('option', { value: 'inherit', textContent: `Default (${settings.defaults.countAllDay ? 'busy' : 'ignore'})` }),
+    h('option', { value: 'count', textContent: 'Busy' }),
+    h('option', { value: 'ignore', textContent: 'Ignore' }),
+  );
+  allDay.value = cal.allDay;
+  return h(
+    'tr',
+    {},
+    h('td', {}, dot, cal.name),
+    h(
+      'td',
+      {},
+      h('input', {
+        type: 'checkbox',
+        checked: cal.enabled,
+        title: 'Checked by default on the website',
+        onchange: (e: Event) => set((c) => (c.enabled = (e.target as HTMLInputElement).checked)),
+      }),
+    ),
+    h('td', {}, allDay),
+  );
+}
+
+function renderAccounts() {
+  const container = $('accounts');
+  container.replaceChildren(
+    ...settings.accounts.map((account) => {
+      const refresh = h('button', { type: 'button', className: 'secondary', textContent: 'Refresh calendars' });
+      refresh.onclick = async () => {
+        refresh.disabled = true;
+        status('Looking for calendars…');
+        try {
+          const found = await discoverCalendars(account);
+          await update((s) => {
+            const a = s.accounts.find((a) => a.id === account.id);
+            if (a) a.calendars = mergeDiscovered(a.calendars, found);
+          });
+          status(`Found ${found.length} calendar(s).`, 'ok');
+        } catch (e) {
+          status(errorText(e), 'error');
+        } finally {
+          refresh.disabled = false;
+        }
+      };
+      const remove = h('button', {
+        type: 'button',
+        className: 'secondary',
+        textContent: 'Remove',
+        onclick: () => {
+          if (!confirm(`Remove "${account.label}"? Its password is deleted from this browser.`)) return;
+          void update((s) => {
+            s.accounts = s.accounts.filter((a) => a.id !== account.id);
+          }).then(() => releaseOrigin(account.serverUrl, settings));
+        },
+      });
+      const table =
+        account.calendars.length === 0
+          ? h('p', { className: 'muted' }, 'No calendars with events found.')
+          : h(
+              'table',
+              { className: 'calendars' },
+              h('tr', {}, h('th', {}, 'Calendar'), h('th', {}, 'Checked by default'), h('th', {}, 'All-day events')),
+              ...account.calendars.map((_, i) => calendarRow(account, i)),
+            );
+      return h(
+        'div',
+        { className: 'account' },
+        h(
+          'div',
+          { className: 'account-head' },
+          h('div', {}, h('strong', {}, account.label), h('div', { className: 'tag' }, `${account.username} @ ${account.serverUrl}`)),
+          h('div', { className: 'actions' }, refresh, remove),
+        ),
+        table,
+      );
+    }),
+  );
+  if (settings.accounts.length === 0) container.append(h('p', { className: 'muted' }, 'No accounts yet.'));
+}
+
+function render() {
+  $<HTMLInputElement>('count-all-day').checked = settings.defaults.countAllDay;
+  renderInstances();
+  renderAccounts();
+}
+
+$<HTMLInputElement>('count-all-day').addEventListener('change', (e) => {
+  const checked = (e.target as HTMLInputElement).checked;
+  void update((s) => {
+    s.defaults.countAllDay = checked;
+  });
+});
+
+$<HTMLFormElement>('add-instance').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const form = e.target as HTMLFormElement;
+  let origin: string;
   try {
-    const pattern = originPattern(currentKrabbeUrl);
-    const has = await ext.permissions.contains({ origins: [pattern] });
-    krabbeGrant.hidden = has;
-    krabbeGrant.textContent = `Grant access to ${new URL(currentKrabbeUrl).origin}`;
-  } catch {
-    krabbeGrant.hidden = true;
+    origin = normalizeInstance(new FormData(form).get('url') as string);
+  } catch (err) {
+    return status(errorText(err), 'error');
   }
-}
-
-krabbeGrant.addEventListener('click', () => {
-  // First async call in the handler, so the user gesture is intact.
-  let granted: Promise<boolean>;
-  try {
-    granted = ext.permissions.request({ origins: [originPattern(currentKrabbeUrl)] });
-  } catch (e) {
-    setStatus(krabbeStatus, errMsg(e), true);
-    return;
-  }
-  void granted.then(
-    async (ok) => {
-      setStatus(krabbeStatus, ok ? 'Access granted' : 'Permission denied', !ok);
-      await refreshKrabbeGrant();
+  requestOrigin(origin).then(
+    async (granted) => {
+      if (!granted) return status(`Permission for ${origin} was not granted.`, 'error');
+      await update((s) => {
+        if (!s.instances.includes(origin)) s.instances.push(origin);
+      });
+      form.reset();
+      status(`Added ${origin}. Reload any open Krabbe tabs on it.`, 'ok');
     },
-    (e) => setStatus(krabbeStatus, errMsg(e), true),
+    (err) => status(errorText(err), 'error'),
   );
 });
 
-krabbeForm.addEventListener('submit', (ev) => {
-  ev.preventDefault();
-  // permissions.request must be the first async call: awaiting earlier loses the user gesture.
-  let url: string;
-  let granted: Promise<boolean>;
-  try {
-    url = normalizeKrabbeUrl(krabbeInput.value);
-    granted = ext.permissions.request({ origins: [originPattern(url)] });
-  } catch (e) {
-    setStatus(krabbeStatus, errMsg(e), true);
-    return;
-  }
-  void (async () => {
-    try {
-      if (!(await granted)) {
-        setStatus(krabbeStatus, 'Permission denied, URL not changed', true);
-        return;
-      }
-      await saveSettings({ krabbeUrl: url });
-      krabbeInput.value = url;
-      currentKrabbeUrl = url;
-      setStatus(krabbeStatus, 'Saved');
-      await refreshKrabbeGrant();
-    } catch (e) {
-      setStatus(krabbeStatus, errMsg(e), true);
-    }
-  })();
-});
-
-// --- Accounts ---
-
-const accountsEl = $('accounts');
-const accountForm = $<HTMLFormElement>('account-form');
-const accountStatus = $('account-status');
-
-function renderAccount(account: Account): HTMLElement {
-  const root = document.createElement('div');
-  root.className = 'account';
-
-  const header = document.createElement('header');
-  const titleBox = document.createElement('div');
-  const title = document.createElement('strong');
-  title.textContent = account.label;
-  const server = document.createElement('div');
-  server.className = 'server';
-  server.textContent = `${account.username} @ ${account.serverUrl}`;
-  titleBox.append(title, server);
-
-  const actions = document.createElement('div');
-  actions.className = 'actions';
-  const refresh = document.createElement('button');
-  refresh.type = 'button';
-  refresh.textContent = 'Refresh calendars';
-  const remove = document.createElement('button');
-  remove.type = 'button';
-  remove.textContent = 'Remove';
-  actions.append(refresh, remove);
-  header.append(titleBox, actions);
-  root.append(header);
-
-  const status = document.createElement('p');
-  status.className = 'status';
-  status.setAttribute('role', 'status');
-
-  for (const cal of account.calendars) {
-    const row = document.createElement('div');
-    row.className = 'calendar';
-    const swatch = document.createElement('span');
-    swatch.className = 'swatch';
-    if (cal.color) swatch.style.backgroundColor = cal.color;
-    const name = document.createElement('span');
-    name.className = 'name';
-    name.textContent = cal.name;
-    const label = document.createElement('label');
-    label.className = 'allday';
-    const box = document.createElement('input');
-    box.type = 'checkbox';
-    box.checked = cal.countAllDay;
-    label.append(box, 'count all-day events');
-    box.addEventListener('change', () => {
-      void (async () => {
-        try {
-          const { accounts } = await getSettings();
-          const a = accounts.find((x) => x.id === account.id);
-          const c = a?.calendars.find((x) => x.url === cal.url);
-          if (!c) return;
-          c.countAllDay = box.checked;
-          await saveSettings({ accounts });
-        } catch (e) {
-          setStatus(status, errMsg(e), true);
-        }
-      })();
-    });
-    row.append(swatch, name, label);
-    root.append(row);
-  }
-  root.append(status);
-
-  refresh.addEventListener('click', () => {
-    void (async () => {
-      try {
-        setStatus(status, 'Refreshing...');
-        const res = await discover(account);
-        if ('error' in res) {
-          setStatus(status, res.error, true);
-          return;
-        }
-        const { accounts } = await getSettings();
-        const a = accounts.find((x) => x.id === account.id);
-        if (!a) return;
-        a.calendars = mergeRefreshedCalendars(a.calendars, res.calendars);
-        await saveSettings({ accounts });
-        await render();
-      } catch (e) {
-        setStatus(status, errMsg(e), true);
-      }
-    })();
-  });
-
-  remove.addEventListener('click', () => {
-    void (async () => {
-      try {
-        const { accounts, selectedCalendars, krabbeUrl } = await getSettings();
-        const urls = new Set(account.calendars.map((c) => c.url));
-        const shared = originStillUsed(accounts, account.id, krabbeUrl);
-        await saveSettings({
-          accounts: accounts.filter((a) => a.id !== account.id),
-          selectedCalendars: selectedCalendars.filter((u) => !urls.has(u)),
-        });
-        try {
-          if (!shared) await ext.permissions.remove({ origins: [originPattern(account.serverUrl)] });
-        } finally {
-          await render();
-        }
-      } catch (e) {
-        setStatus(status, errMsg(e), true);
-      }
-    })();
-  });
-
-  return root;
-}
-
-async function render(): Promise<void> {
-  const settings = await getSettings();
-  krabbeInput.value = settings.krabbeUrl;
-  currentKrabbeUrl = settings.krabbeUrl;
-  await refreshKrabbeGrant();
-  accountsEl.replaceChildren(...settings.accounts.map(renderAccount));
-  if (settings.accounts.length === 0) {
-    const empty = document.createElement('p');
-    empty.className = 'status';
-    empty.textContent = 'No accounts yet.';
-    accountsEl.append(empty);
-  }
-}
-
-accountForm.addEventListener('submit', (ev) => {
-  ev.preventDefault();
-  const data = new FormData(accountForm);
-  const field = (k: string) => String(data.get(k) ?? '');
-  const draft = {
-    label: field('label').trim(),
-    serverUrl: field('serverUrl').trim(),
-    username: field('username'),
-    password: field('password'),
+$<HTMLFormElement>('add-account').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const form = e.target as HTMLFormElement;
+  const data = new FormData(form);
+  const creds: Credentials = {
+    serverUrl: String(data.get('serverUrl')).trim(),
+    username: String(data.get('username')).trim(),
+    password: String(data.get('password')),
   };
-  // permissions.request must be the first async call: awaiting earlier loses the user gesture.
-  let granted: Promise<boolean>;
+  const button = form.querySelector('button')!;
+  let label: string;
   try {
-    // Also ask for the krabbe origin so the content script can be registered right away.
-    const origins = [...new Set([originPattern(draft.serverUrl), originPattern(currentKrabbeUrl)])];
-    granted = ext.permissions.request({ origins });
-  } catch (e) {
-    setStatus(accountStatus, errMsg(e), true);
-    return;
+    label = String(data.get('label')).trim() || new URL(creds.serverUrl).hostname;
+  } catch (err) {
+    return status(errorText(err), 'error');
   }
-  void (async () => {
-    try {
-      if (!(await granted)) {
-        setStatus(accountStatus, 'Permission denied, account not added', true);
-        return;
+  requestOrigin(creds.serverUrl).then(
+    async (granted) => {
+      if (!granted) return status('Permission to contact the calendar server was not granted.', 'error');
+      button.disabled = true;
+      status('Looking for calendars…');
+      try {
+        const found = await discoverCalendars(creds);
+        await update((s) => {
+          s.accounts.push({ id: newId(), label, ...creds, calendars: mergeDiscovered([], found) });
+        });
+        form.reset();
+        $<HTMLDetailsElement>('add-account-box').open = false;
+        status(`Added ${label} with ${found.length} calendar(s).`, 'ok');
+      } catch (err) {
+        status(errorText(err), 'error');
+      } finally {
+        button.disabled = false;
       }
-      setStatus(accountStatus, 'Discovering calendars...');
-      const res = await discover(draft);
-      if ('error' in res) {
-        setStatus(accountStatus, res.error, true);
-        return;
-      }
-      const { accounts } = await getSettings();
-      accounts.push({
-        id: crypto.randomUUID(),
-        ...draft,
-        calendars: mergeRefreshedCalendars([], res.calendars),
-      });
-      await saveSettings({ accounts });
-      accountForm.reset();
-      setStatus(accountStatus, `Added ${res.calendars.length} calendar(s)`);
-      await render();
-    } catch (e) {
-      setStatus(accountStatus, errMsg(e), true);
-    }
-  })();
+    },
+    (err) => status(errorText(err), 'error'),
+  );
 });
 
-void render();
+// Another settings tab (or a migration) changed something: show it.
+ext.storage.onChanged.addListener((_changes, area) => {
+  if (area === 'local') void getSettings().then((s) => ((settings = s), render()));
+});
+
+void getSettings().then(
+  (s) => {
+    settings = s;
+    render();
+  },
+  (e) => status(errorText(e), 'error'),
+);

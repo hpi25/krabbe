@@ -11,15 +11,12 @@ import { calculateTable, makeClass, parseSpecificDate } from '/src/utils'
 import { getScoreForTime, MAXSCORE } from '/src/utils/star'
 
 import styles from './AvailabilityEditor.module.scss'
+import CalendarConflicts from './components/CalendarConflicts/CalendarConflicts'
 import GoogleCalendar from './components/GoogleCalendar/GoogleCalendar'
 import RecentEvents from './components/RecentEvents/RecentEvents'
 import ScoreSelector from './components/ScoreSelector/ScoreSelector'
-import { useCalendarBridge } from './useCalendarBridge'
 import viewerStyles from '../AvailabilityViewer/AvailabilityViewer.module.scss'
 import Skeleton from '../AvailabilityViewer/components/Skeleton/Skeleton'
-
-/** Where to get the calendar extension until it's in the browser stores */
-const EXTENSION_URL = 'https://github.com/hpi25/krabbe/releases/tag/browser-extension'
 
 interface AvailabilityEditorProps {
   eventId?: string
@@ -64,8 +61,7 @@ const AvailabilityEditor = ({ eventId, times, timezone, value = [], onChange, ta
     }))
   ), [onChange, times, value])
 
-  // Let a browser extension clear times that conflict with the user's calendar
-  // `times` is in click order, so take the true min / max
+  // Range for the calendar extension; `times` is in click order, so take the true min / max
   const isSpecificDates = times[0]?.length === 13
   const { timeStart, timeEnd } = useMemo(() => {
     if (!isSpecificDates) return { timeStart: undefined, timeEnd: undefined }
@@ -78,14 +74,6 @@ const AvailabilityEditor = ({ eventId, times, timezone, value = [], onChange, ta
     }
     return { timeStart: min, timeEnd: max.add({ minutes: 15 }) }
   }, [isSpecificDates, times])
-  const hasCalendarExtension = useCalendarBridge({
-    timezone,
-    timeStart,
-    timeEnd,
-    preferences: value,
-    onImport: onChange,
-  })
-
   // Selection keyboard shortcuts
   useEffect(() => {
     const handleKeydown = (e: KeyboardEvent) => {
@@ -128,17 +116,14 @@ const AvailabilityEditor = ({ eventId, times, timezone, value = [], onChange, ta
           preferences={value}
           onImport={onChange}
         />
-        <div data-calendar-bridge>
-          {!hasCalendarExtension && <Button
-            href={EXTENSION_URL}
-            target="_blank"
-            rel="noreferrer noopener"
-            title={t('you.calendar_conflicts_install')}
-          >{t('you.calendar_conflicts')}</Button>}
-        </div>
+        {timeStart && timeEnd && <CalendarConflicts
+          timezone={timezone}
+          timeStart={timeStart}
+          timeEnd={timeEnd}
+          preferences={value}
+          onImport={onChange}
+        />}
       </div>
-      {/* The extension's panel goes here, outside the row, so opening it doesn't reflow the buttons */}
-      <div data-calendar-bridge-panel />
     </Content>}
     <Content>
       <ScoreSelector
