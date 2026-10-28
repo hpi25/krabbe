@@ -14,6 +14,7 @@ import { useTranslation } from '/src/i18n/client'
 import { useStore } from '/src/stores'
 import useSettingsStore from '/src/stores/settingsStore'
 import { calculateAvailability, calculateTable, getDisplayNames, makeClass, NameScore, relativeTimeFormat } from '/src/utils'
+import { downloadIcs } from '/src/utils/downloadIcs'
 import { averageAndRound, calculateBestTime, calculateTimeMap, MAXSCORE } from '/src/utils/star'
 import { timeToLocaleString } from '/src/utils/timeToLocaleString'
 
@@ -29,9 +30,10 @@ interface AvailabilityViewerProps {
   timezone: string
   eventTimezone?: string
   displayBestFit: boolean
+  eventName?: string // title for the best time's calendar entry
 }
 
-const AvailabilityViewer = ({ times, people, table, eventId, timeFormat, timezone, eventTimezone, displayBestFit }: AvailabilityViewerProps) => {
+const AvailabilityViewer = ({ times, people, table, eventId, timeFormat, timezone, eventTimezone, displayBestFit, eventName }: AvailabilityViewerProps) => {
   const { t, i18n } = useTranslation('event')
 
   const highlight = useStore(useSettingsStore, state => state.highlight)
@@ -130,6 +132,17 @@ const AvailabilityViewer = ({ times, people, table, eventId, timeFormat, timezon
       ]
     },
     [results, i18n.language, timeFormat, timezone, filteredPeople.length])
+
+  // Download the best time as a calendar entry, weekly polls repeat every week
+  const downloadBestTime = () => {
+    if (!results.bestTime) return
+    downloadIcs({
+      start: timeMap[results.bestTime.time],
+      duration: meetingDuration,
+      title: eventName ?? t('group.best_time_title'),
+      weekly: results.bestTime.time.length !== 13,
+    })
+  }
 
   /* End of STAR section */
 
@@ -305,7 +318,7 @@ const AvailabilityViewer = ({ times, people, table, eventId, timeFormat, timezon
           <Trans i18nKey="group.best_fit2" t={t} i18n={i18n}>
             {/* eslint-disable-next-line */}
             {/* @ts-ignore */}
-            _<strong className={styles.bestTime}>{{time: bestFormatted.time}}</strong>
+            _<button type="button" className={styles.bestTime} onClick={downloadBestTime} title={t('group.best_time_download')}>{{time: bestFormatted.time}}</button>
           </Trans>
         </p>
         {nextFormatted

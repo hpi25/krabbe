@@ -53,6 +53,8 @@
     "best_fit1": "Für eine Veranstaltungsdauer von",
     "best_fit2": "ist die beste Zeit <1>{{time}}</1>",
     "best_fit3": "<strong>{{bestTime}}</strong> und <strong>{{nextBest}}</strong> haben mit {{bestStars}} und {{nextStars}} am besten abgeschnitten<br/>Zwischen diesen beiden Finalisten: {{bestVotesPeople}} für die beste Zeit, {{nextVotesPeople}} für die zweitbeste Zeit und {{noPrefPeople}} ohne Präferenz",
+    "best_time_download": "Als Kalendereintrag herunterladen (.ics)",
+    "best_time_title": "Beste Zeit",
     "hours_one": "{{count}} Stunde",
     "hours_other": "{{count}} Stunden",
     "minutes": "Minuten",

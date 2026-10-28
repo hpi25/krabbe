@@ -240,4 +240,16 @@
 
 .bestTime {
   color: var(--primary);
+  font: inherit;
+  font-weight: bold;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+
+  &:hover, &:focus-visible {
+    text-decoration-style: solid;
+  }
 }

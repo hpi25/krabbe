@@ -53,6 +53,8 @@
     "best_fit1": "For an event duration of",
     "best_fit2": "the best time is <1>{{time}}</1>",
     "best_fit3": "<strong>{{bestTime}}</strong> and <strong>{{nextBest}}</strong> scored the highest with {{bestStars}} and {{nextStars}}<br/>Between these two finalists, {{bestVotesPeople}} preferred the best time, {{nextVotesPeople}} preferred the next best time, and {{noPrefPeople}} expressed no preference",
+    "best_time_download": "Download as calendar entry (.ics)",
+    "best_time_title": "Best time",
     "hours_one": "{{count}} hour",
     "hours_other": "{{count}} hours",
     "minutes": "minutes",

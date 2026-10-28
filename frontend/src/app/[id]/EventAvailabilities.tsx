@@ -178,6 +178,7 @@ const EventAvailabilities = ({ event }: EventAvailabilitiesProps) => {
       timezone={timezone}
       eventTimezone={event?.timezone}
       displayBestFit={true}
+      eventName={event?.name}
     /> : user && <><AvailabilityEditor
       eventId={event?.id}
       times={expandedTimes}
