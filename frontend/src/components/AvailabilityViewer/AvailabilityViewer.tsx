@@ -53,7 +53,7 @@ const AvailabilityViewer = ({ times, people, table, eventId, timeFormat, timezon
   })
 
   // Calculate availabilities
-  const { availabilities, min, max } = useMemo(() =>
+  const { availabilities, min, max, maxPeople } = useMemo(() =>
     calculateAvailability(times, people.filter(p => filteredPeople.includes(p.name))),
   [times, filteredPeople, people])
 
@@ -183,8 +183,12 @@ const AvailabilityViewer = ({ times, people, table, eventId, timeFormat, timezon
               styles.time,
               styles.nonEditable,
               (focusCount === undefined || focusCount === hereCount) // whether to show
-                && highlight
-                && (hereCount === max || (tempFocus && hereCount === MAXSCORE)) // only the highest scoring times
+                && (
+                  (highlight === 'Preference'
+                    && (hereCount === max || (tempFocus && hereCount === MAXSCORE))) // only the highest scoring times
+                  || (highlight === 'Availability'
+                    && peopleHere.length === (tempFocus ? 1 : maxPeople)) // only the times most people are available
+                )
                 && peopleHere.length > 0
                 && styles.highlight,
             )}
@@ -218,6 +222,7 @@ const AvailabilityViewer = ({ times, people, table, eventId, timeFormat, timezon
     table?.columns,
     highlight,
     max,
+    maxPeople,
     min,
     t,
     palette,
