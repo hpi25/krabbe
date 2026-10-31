@@ -1,6 +1,5 @@
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react'
 import { Trans } from 'react-i18next/TransWithoutContext'
-import { Temporal } from '@js-temporal/polyfill'
 
 import Button from '/src/components/Button/Button'
 import Content from '/src/components/Content/Content'
@@ -22,12 +21,13 @@ interface AvailabilityEditorProps {
   eventId?: string
   times: string[]
   timezone: string
+  eventTimezone?: string
   value: TimeScore[]
   onChange: (value: TimeScore[]) => void
   table?: ReturnType<typeof calculateTable>
 }
 
-const AvailabilityEditor = ({ eventId, times, timezone, value = [], onChange, table }: AvailabilityEditorProps) => {
+const AvailabilityEditor = ({ eventId, times, timezone, eventTimezone, value = [], onChange, table }: AvailabilityEditorProps) => {
   const { t, i18n } = useTranslation('event')
 
   // Ref and state required to rerender but also access static version in callbacks
@@ -61,19 +61,6 @@ const AvailabilityEditor = ({ eventId, times, timezone, value = [], onChange, ta
     }))
   ), [onChange, times, value])
 
-  // Range for the calendar extension; `times` is in click order, so take the true min / max
-  const isSpecificDates = times[0]?.length === 13
-  const { timeStart, timeEnd } = useMemo(() => {
-    if (!isSpecificDates) return { timeStart: undefined, timeEnd: undefined }
-    const parsed = times.map(parseSpecificDate)
-    let min = parsed[0]
-    let max = parsed[0]
-    for (const p of parsed) {
-      if (Temporal.ZonedDateTime.compare(p, min) < 0) min = p
-      if (Temporal.ZonedDateTime.compare(p, max) > 0) max = p
-    }
-    return { timeStart: min, timeEnd: max.add({ minutes: 15 }) }
-  }, [isSpecificDates, times])
   // Selection keyboard shortcuts
   useEffect(() => {
     const handleKeydown = (e: KeyboardEvent) => {
@@ -99,32 +86,34 @@ const AvailabilityEditor = ({ eventId, times, timezone, value = [], onChange, ta
         <Button isSmall onClick={selectInvert} title="Ctrl + I (⌘ I)">{t('you.select_invert')}</Button>
       </div>
     </Content>
-    {times[0]?.length === 13 && <Content>
+    <Content>
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
-        <GoogleCalendar
-          timezone={timezone}
-          timeStart={parseSpecificDate(times[0])}
-          timeEnd={parseSpecificDate(times[times.length - 1]).add({ minutes: 15 })}
+        {times[0]?.length === 13 && <>
+          <GoogleCalendar
+            timezone={timezone}
+            timeStart={parseSpecificDate(times[0])}
+            timeEnd={parseSpecificDate(times[times.length - 1]).add({ minutes: 15 })}
+            times={times}
+            preferences={value}
+            selectedScore={selectedScore}
+            onImport={onChange}
+          />
+          <RecentEvents
+            eventId={eventId}
+            times={times}
+            preferences={value}
+            onImport={onChange}
+          />
+        </>}
+        <CalendarConflicts
           times={times}
+          timezone={timezone}
+          eventTimezone={eventTimezone}
           preferences={value}
-          selectedScore={selectedScore}
           onImport={onChange}
         />
-        <RecentEvents
-          eventId={eventId}
-          times={times}
-          preferences={value}
-          onImport={onChange}
-        />
-        {timeStart && timeEnd && <CalendarConflicts
-          timezone={timezone}
-          timeStart={timeStart}
-          timeEnd={timeEnd}
-          preferences={value}
-          onImport={onChange}
-        />}
       </div>
-    </Content>}
+    </Content>
     <Content>
       <ScoreSelector
         value={selectedScore}

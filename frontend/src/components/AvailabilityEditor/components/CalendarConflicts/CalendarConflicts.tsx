@@ -6,7 +6,7 @@ import { CalendarX, Settings } from 'lucide-react'
 import Button from '/src/components/Button/Button'
 import { TimeScore } from '/src/config/api'
 import { useTranslation } from '/src/i18n/client'
-import { allowUrlToWrap } from '/src/utils'
+import { allowUrlToWrap, convertTimesToDates, range } from '/src/utils'
 import { removeBusyTimes } from '/src/utils/removeBusyTimes'
 
 import styles from './CalendarConflicts.module.scss'
@@ -15,9 +15,9 @@ import { CalendarErrorCode, ExtensionCalendar, useExtensionBridge } from '../../
 export const EXTENSION_URL = 'https://github.com/hpi25/krabbe/tree/main/browser-extension'
 
 interface CalendarConflictsProps {
+  times: string[]
   timezone: string
-  timeStart: Temporal.ZonedDateTime
-  timeEnd: Temporal.ZonedDateTime
+  eventTimezone?: string
   preferences: TimeScore[]
   onImport: (availability: TimeScore[]) => void
 }
@@ -29,7 +29,7 @@ interface Result {
 }
 
 /** Removes selected times that clash with the user's CalDAV calendars, via the Krabbe browser extension */
-const CalendarConflicts = ({ timezone, timeStart, timeEnd, preferences, onImport }: CalendarConflictsProps) => {
+const CalendarConflicts = ({ times, timezone, eventTimezone, preferences, onImport }: CalendarConflictsProps) => {
   const { t, i18n } = useTranslation('event')
   const { status, listCalendars, fetchBusy, openSettings } = useExtensionBridge()
 
@@ -37,6 +37,9 @@ const CalendarConflicts = ({ timezone, timeStart, timeEnd, preferences, onImport
   const [calendars, setCalendars] = useState<(ExtensionCalendar & { isChecked: boolean })[]>()
   const [isLoading, setIsLoading] = useState(false)
   const [result, setResult] = useState<Result>()
+  const isWeekly = times[0]?.length !== 13
+  const [weeks, setWeeks] = useState(4)
+  const [includeCurrentWeek, setIncludeCurrentWeek] = useState(true)
 
   // Keep latest preferences for the async apply without re-creating it on every change
   const latest = useRef({ preferences, onImport })
@@ -58,16 +61,23 @@ const CalendarConflicts = ({ timezone, timeStart, timeEnd, preferences, onImport
 
   const apply = useCallback(() => {
     if (!calendars) return
+    // Weekday times resolve to this week, so shift them by each checked week (in the event timezone to keep wall-clock times)
+    const offsets = isWeekly ? range(includeCurrentWeek ? 0 : 1, weeks) : [0]
+    const dates = convertTimesToDates(times, timezone, eventTimezone)
+    const slots = new Map(times.map((time, i) => [time, offsets.map(w =>
+      dates[i].withTimeZone(eventTimezone ?? timezone).add({ weeks: w }).epochMilliseconds
+    )]))
+    const starts = [...slots.values()].flat()
     setIsLoading(true)
     fetchBusy({
       calendarIds: calendars.filter(c => c.isChecked).map(c => c.id),
-      timeStart: timeStart.toInstant().toString(),
-      timeEnd: timeEnd.toInstant().toString(),
+      timeStart: Temporal.Instant.fromEpochMilliseconds(Math.min(...starts)).toString(),
+      timeEnd: Temporal.Instant.fromEpochMilliseconds(Math.max(...starts)).add({ minutes: 15 }).toString(),
       timezone,
     })
       .then(({ busy, errors }) => {
         const { preferences, onImport } = latest.current
-        const remaining = removeBusyTimes(preferences, busy)
+        const remaining = removeBusyTimes(preferences, busy, time => slots.get(time) ?? [])
         onImport(remaining)
         setResult({
           removed: preferences.length - remaining.length,
@@ -82,7 +92,7 @@ const CalendarConflicts = ({ timezone, timeStart, timeEnd, preferences, onImport
         setIsLoading(false)
         modalRef.current?.close()
       })
-  }, [calendars, fetchBusy, timeStart, timeEnd, timezone])
+  }, [calendars, fetchBusy, times, timezone, eventTimezone, isWeekly, weeks, includeCurrentWeek])
 
   if (status === 'checking') return null
 
@@ -95,9 +105,10 @@ const CalendarConflicts = ({ timezone, timeStart, timeEnd, preferences, onImport
   const accounts = [...new Set(calendars?.map(c => c.account))]
 
   return <>
-    <Button onClick={open} icon={<CalendarX aria-hidden="true" />}>{t('you.integration.extension.button')}</Button>
+    <Button onClick={open} title={t('you.integration.extension.button_title')} icon={<CalendarX aria-hidden="true" />}>{t('you.integration.extension.button')}</Button>
     <Button
       isSecondary
+      title={t('you.integration.extension.settings_title')}
       onClick={() => openSettings().catch(console.error)}
       icon={<Settings aria-hidden="true" />}
     >{t('you.integration.extension.settings')}</Button>
@@ -142,6 +153,24 @@ const CalendarConflicts = ({ timezone, timeStart, timeEnd, preferences, onImport
             <label htmlFor={`extension-calendar-${calendar.id}`}>{allowUrlToWrap(calendar.name)}</label>
           </div>)}
         </fieldset>)}
+        {isWeekly && <div className={styles.weeks}>
+          <label>
+            {t('you.integration.extension.weeks')}
+            <select value={weeks} onChange={e => setWeeks(Number(e.target.value))}>
+              {range(1, 8).map(n => <option key={n} value={n}>{t('you.integration.extension.weeks_option', { count: n })}</option>)}
+            </select>
+          </label>
+          <div className={styles.item}>
+            <input
+              type="checkbox"
+              id="extension-current-week"
+              checked={includeCurrentWeek}
+              onChange={() => setIncludeCurrentWeek(!includeCurrentWeek)}
+            />
+            <label htmlFor="extension-current-week">{t('you.integration.extension.current_week')}</label>
+          </div>
+          <p className={styles.muted}>{t('you.integration.extension.weeks_info')}</p>
+        </div>}
         <p className={styles.muted}>{t('you.integration.extension.info')}</p>
       </>}
 
@@ -150,7 +179,7 @@ const CalendarConflicts = ({ timezone, timeStart, timeEnd, preferences, onImport
           {t('you.integration.extension.cancel')}
         </Button>
         {calendars?.length === 0
-          ? <Button isSmall onClick={() => openSettings().catch(console.error)}>{t('you.integration.extension.settings')}</Button>
+          ? <Button isSmall title={t('you.integration.extension.settings_title')} onClick={() => openSettings().catch(console.error)}>{t('you.integration.extension.settings')}</Button>
           : <Button
             isSmall
             isLoading={isLoading}

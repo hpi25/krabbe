@@ -1,4 +1,3 @@
-import { parseSpecificDate } from './convertTimesToDates'
 import { TimeScore } from '../config/api'
 
 // Each time in the grid represents a 15 minute slot
@@ -12,12 +11,14 @@ export interface BusyInterval {
 }
 
 /**
- * Remove every scored time whose 15 minute slot overlaps a busy interval.
- * Only works with specific date (`HHmm-DDMMYYYY`) times.
+ * Remove every scored time where any of its 15 minute slots overlaps a busy interval.
+ * `getSlotStarts` returns the epoch milliseconds a time stands for, e.g. one per checked week for weekday times.
  */
-export const removeBusyTimes = (preferences: TimeScore[], busy: BusyInterval[]): TimeScore[] =>
-  preferences.filter(({ time }) => {
-    const slotStart = parseSpecificDate(time).epochMilliseconds
-    const slotEnd = slotStart + SLOT_MS
-    return !busy.some(b => slotStart < b.end && slotEnd > b.start)
-  })
+export const removeBusyTimes = (
+  preferences: TimeScore[],
+  busy: BusyInterval[],
+  getSlotStarts: (time: string) => number[],
+): TimeScore[] =>
+  preferences.filter(({ time }) => !getSlotStarts(time).some(slotStart =>
+    busy.some(b => slotStart < b.end && slotStart + SLOT_MS > b.start)
+  ))

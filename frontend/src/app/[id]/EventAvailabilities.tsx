@@ -183,6 +183,7 @@ const EventAvailabilities = ({ event }: EventAvailabilitiesProps) => {
       eventId={event?.id}
       times={expandedTimes}
       timezone={timezone}
+      eventTimezone={event?.timezone}
       value={user.availability}
       onChange={availability => {
         if (!event) return

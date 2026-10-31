@@ -101,6 +101,25 @@
   }
 }
 
+.weeks {
+  font-size: 15px;
+  font-weight: 500;
+
+  & select {
+    font: inherit;
+    color: inherit;
+    background: var(--background);
+    border: 1px solid var(--surface);
+    border-radius: 3px;
+    margin-left: .4em;
+    padding: 2px 4px;
+  }
+
+  & .muted {
+    margin: 0;
+  }
+}
+
 .buttons {
   display: flex;
   justify-content: flex-end;
