@@ -40,6 +40,14 @@
         "On": "On"
       }
     },
+    "highlight_availability": {
+      "label": "Highlight highest availability",
+      "title": "Make the times when the most people are available on the heatmap stand out",
+      "options": {
+        "Off": "Off",
+        "On": "On"
+      }
+    },
     "language": {
       "label": "Language"
     },

@@ -46,7 +46,7 @@
     "group": "Gruppenverfügbarkeit"
   },
   "group": {
-    "legend_tooltip": "Klicke hier, um die grösste Verfügbarkeit hervorzuheben",
+    "legend_tooltip": "Klicke hier, um die höchste Präferenz hervorzuheben",
     "info1": "Bewege den Mauszeiger oder tippe auf den Kalender unten, um zu sehen, wer verfügbar ist",
     "info2": "Klicke auf die Namen unten, um einzelne Personen anzuzeigen",
     "clipboard_message": "Verfügbare Personen am {{date}}",

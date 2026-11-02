@@ -124,8 +124,20 @@ const Settings = () => {
               'Off': t('options.highlight.options.Off'),
               'On': t('options.highlight.options.On'),
             }}
-            value={store.highlight ? 'On' : 'Off'}
-            onChange={value => store.setHighlight(value === 'On')}
+            value={store.highlight === 'Preference' ? 'On' : 'Off'}
+            onChange={value => store.setHighlight(value === 'On' ? 'Preference' : 'Off')}
+          />
+
+          <ToggleField
+            label={t('options.highlight_availability.label')}
+            name="highlight_availability"
+            description={t('options.highlight_availability.title')}
+            options={{
+              'Off': t('options.highlight_availability.options.Off'),
+              'On': t('options.highlight_availability.options.On'),
+            }}
+            value={store.highlight === 'Availability' ? 'On' : 'Off'}
+            onChange={value => store.setHighlight(value === 'On' ? 'Availability' : 'Off')}
           />
 
           <SelectField

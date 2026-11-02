@@ -21,6 +21,8 @@ interface AvailabilityInfo {
   min: number
   /** The total score for the date with highest availability */
   max: number
+  /** The most people available (>0 score) at any one date */
+  maxPeople: number
 }
 
 /**
@@ -31,10 +33,11 @@ interface AvailabilityInfo {
 export const calculateAvailability = (dates: string[], people: PersonResponse[]): AvailabilityInfo => {
   if (people.length === 0) {
     // short circuit so we don't return infinities
-    return { availabilities: [], min: 0, max: 0 }
+    return { availabilities: [], min: 0, max: 0, maxPeople: 0 }
   }
   let min = Infinity
   let max = -Infinity
+  let maxPeople = 0
 
   const availabilities: Availability[] = dates.map(date => {
     // for a date, get the names of people that gave a score > 0 and their score
@@ -49,8 +52,11 @@ export const calculateAvailability = (dates: string[], people: PersonResponse[])
     if (totalScore > max) {
       max = totalScore
     }
+    if (nameScores.length > maxPeople) {
+      maxPeople = nameScores.length
+    }
     return { date, people: nameScores }
   })
 
-  return { availabilities, min, max }
+  return { availabilities, min, max, maxPeople }
 }

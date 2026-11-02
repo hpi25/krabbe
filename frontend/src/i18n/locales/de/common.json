@@ -32,8 +32,16 @@
       }
     },
     "highlight": {
-      "label": "Beste Verfügbarkeit hervorheben",
-      "title": "Lass die beste Verfügbarkeit auf der Heatmap hervorstechen",
+      "label": "Höchste Präferenz hervorheben",
+      "title": "Lass die höchste Präferenz auf der Heatmap hervorstechen",
+      "options": {
+        "Off": "Aus",
+        "On": "An"
+      }
+    },
+    "highlight_availability": {
+      "label": "Höchste Verfügbarkeit hervorheben",
+      "title": "Lass die Zeiten, zu denen die meisten Personen verfügbar sind, auf der Heatmap hervorstechen",
       "options": {
         "Off": "Aus",
         "On": "An"
