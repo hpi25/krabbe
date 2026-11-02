@@ -135,24 +135,6 @@ const CalendarConflicts = ({ times, timezone, eventTimezone, preferences, onImpo
       {calendars?.length === 0 && <p className={styles.muted}>{t('you.integration.extension.empty')}</p>}
 
       {calendars && calendars.length > 0 && <>
-        <div className={styles.options}>
-          {calendars.every(c => c.isChecked)
-            ? <button className={styles.linkButton} type="button" onClick={() => setCalendars(calendars.map(c => ({ ...c, isChecked: false })))}>{t('you.select_none')}</button>
-            : <button className={styles.linkButton} type="button" onClick={() => setCalendars(calendars.map(c => ({ ...c, isChecked: true })))}>{t('you.select_all')}</button>}
-        </div>
-        {accounts.map(account => <fieldset key={account} className={styles.account}>
-          {accounts.length > 1 && <legend>{account}</legend>}
-          {calendars.filter(c => c.account === account).map(calendar => <div key={calendar.id} className={styles.item}>
-            <input
-              type="checkbox"
-              id={`extension-calendar-${calendar.id}`}
-              style={{ accentColor: calendar.color?.slice(0, 7) }}
-              checked={calendar.isChecked}
-              onChange={() => setCalendars(calendars.map(c => c.id === calendar.id ? { ...c, isChecked: !c.isChecked } : c))}
-            />
-            <label htmlFor={`extension-calendar-${calendar.id}`}>{allowUrlToWrap(calendar.name)}</label>
-          </div>)}
-        </fieldset>)}
         {isWeekly && <div className={styles.weeks}>
           <label>
             {t('you.integration.extension.weeks')}
@@ -171,6 +153,24 @@ const CalendarConflicts = ({ times, timezone, eventTimezone, preferences, onImpo
           </div>
           <p className={styles.muted}>{t('you.integration.extension.weeks_info')}</p>
         </div>}
+        <div className={styles.options}>
+          {calendars.every(c => c.isChecked)
+            ? <button className={styles.linkButton} type="button" onClick={() => setCalendars(calendars.map(c => ({ ...c, isChecked: false })))}>{t('you.select_none')}</button>
+            : <button className={styles.linkButton} type="button" onClick={() => setCalendars(calendars.map(c => ({ ...c, isChecked: true })))}>{t('you.select_all')}</button>}
+        </div>
+        {accounts.map(account => <fieldset key={account} className={styles.account}>
+          {accounts.length > 1 && <legend>{account}</legend>}
+          {calendars.filter(c => c.account === account).map(calendar => <div key={calendar.id} className={styles.item}>
+            <input
+              type="checkbox"
+              id={`extension-calendar-${calendar.id}`}
+              style={{ accentColor: calendar.color?.slice(0, 7) }}
+              checked={calendar.isChecked}
+              onChange={() => setCalendars(calendars.map(c => c.id === calendar.id ? { ...c, isChecked: !c.isChecked } : c))}
+            />
+            <label htmlFor={`extension-calendar-${calendar.id}`}>{allowUrlToWrap(calendar.name)}</label>
+          </div>)}
+        </fieldset>)}
         <p className={styles.muted}>{t('you.integration.extension.info')}</p>
       </>}
 

@@ -104,12 +104,21 @@
 .weeks {
   font-size: 15px;
   font-weight: 500;
+  background: var(--surface);
+  border-left: 3px solid var(--primary);
+  border-radius: 3px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+
+  & .item {
+    margin-block: .4em;
+  }
 
   & select {
     font: inherit;
     color: inherit;
     background: var(--background);
-    border: 1px solid var(--surface);
+    border: 1px solid var(--highlight);
     border-radius: 3px;
     margin-left: .4em;
     padding: 2px 4px;
